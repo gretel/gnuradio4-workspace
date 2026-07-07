@@ -1,0 +1,123 @@
+# SPDX-License-Identifier: MIT
+# Cross-compile for armv7-eabihf (PlutoSDR, FISH Ball).
+#
+# Build:  docker build -f docker/Dockerfile.cross-armv7 -t gr4-workspace:armv7 .
+# Run:    docker run --rm gr4-workspace:armv7 /opt/gnuradio4/bin/gnuradio4
+#
+# Layers:
+#   1. Bootlin armv7-eabihf toolchain (gcc 15.1.0, glibc 2.41)
+#   2. SoapySDR 0.8.1 cross-built into sysroot
+#   3. libiio v0.26 cross-built into sysroot (network-only)
+#   4. Workspace cmake cross-configure + build + install to /opt/gnuradio4
+#
+# Reference: gretel/gr4-lora .github/workflows/_cross-build.yml
+
+FROM ubuntu:24.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TOOLCHAIN_URL="https://toolchains.bootlin.com/downloads/releases/toolchains/armv7-eabihf/tarballs/armv7-eabihf--glibc--bleeding-edge-2025.08-1.tar.xz"
+ENV TOOLCHAIN_SHA256="eed0e672d305ac08d444685b48eafb291c63387ef7916c1615354ebfb3d1ebdc"
+ENV TOOLCHAIN_ROOT="/toolchain/armv7-eabihf--glibc--bleeding-edge-2025.08-1"
+ENV TRIPLE="arm-buildroot-linux-gnueabihf"
+ENV ARMV7_TOOLCHAIN_ROOT="${TOOLCHAIN_ROOT}"
+
+# hadolint ignore=DL3008,DL3003,DL4006
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    cmake ninja-build ccache g++ make git pkgconf ca-certificates libcpp-httplib-dev curl xz-utils patchelf file \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy cmake toolchain files early (needed by SoapySDR + libiio cross-builds).
+# Source tree copied later for workspace build.
+COPY cmake/ /src/cmake/
+
+WORKDIR /src
+
+# --- Stage 1: Bootlin toolchain ---
+# hadolint ignore=DL3003,DL4006
+RUN set -eux; \
+    mkdir -p /toolchain; \
+    cd /toolchain; \
+    curl -fsSL -o toolchain.tar.xz "$TOOLCHAIN_URL"; \
+    echo "$TOOLCHAIN_SHA256  toolchain.tar.xz" | sha256sum -c -; \
+    tar xf toolchain.tar.xz; \
+    rm toolchain.tar.xz; \
+    "$TOOLCHAIN_ROOT/bin/${TRIPLE}-gcc" --version; \
+    "$TOOLCHAIN_ROOT/bin/${TRIPLE}-g++" --version
+
+# --- Stage 2: SoapySDR 0.8.1 cross-built into sysroot ---
+ENV SYSROOT="${TOOLCHAIN_ROOT}/${TRIPLE}/sysroot"
+RUN set -eux; \
+    mkdir -p soapy-src; \
+    curl -fsSL -o soapy.tar.gz \
+      "https://github.com/pothosware/SoapySDR/archive/refs/tags/soapy-sdr-0.8.1.tar.gz"; \
+    tar -xf soapy.tar.gz -C soapy-src --strip-components=1; \
+    rm soapy.tar.gz; \
+    cmake -S soapy-src -B soapy-build -G Ninja \
+      -DCMAKE_TOOLCHAIN_FILE=/src/cmake/toolchain-armv7-bootlin.cmake \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_INSTALL_PREFIX="${SYSROOT}/usr" \
+      -DENABLE_PYTHON=OFF -DENABLE_PYTHON3=OFF \
+      -DENABLE_TESTS=OFF -DENABLE_DOCS=OFF -DENABLE_APPS=OFF \
+      -DENABLE_LIBRARY=ON; \
+    cmake --build soapy-build -j2; \
+    cmake --install soapy-build; \
+    rm -rf soapy-src soapy-build
+
+# --- Stage 3: libiio v0.26 cross-built into sysroot (network-only) ---
+RUN set -eux; \
+    mkdir -p libiio-src; \
+    curl -fsSL -o libiio.tar.gz \
+      "https://github.com/analogdevicesinc/libiio/archive/refs/tags/v0.26.tar.gz"; \
+    tar -xf libiio.tar.gz -C libiio-src --strip-components=1; \
+    rm libiio.tar.gz; \
+    sed -i 's/^[[:space:]]*set(NEED_LIBXML2 1)/  # set(NEED_LIBXML2 1)  # disabled for standalone network-only build/' libiio-src/CMakeLists.txt; \
+    cmake -S libiio-src -B libiio-build -G Ninja \
+      -DCMAKE_TOOLCHAIN_FILE=/src/cmake/toolchain-armv7-bootlin.cmake \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_INSTALL_PREFIX="${SYSROOT}/usr" \
+      -DWITH_XML_BACKEND=OFF \
+      -DWITH_USB_BACKEND=OFF \
+      -DWITH_LOCAL_BACKEND=OFF \
+      -DWITH_NETWORK_BACKEND=ON \
+      -DWITH_SERIAL_BACKEND=OFF \
+      -DWITH_IIOD=OFF \
+      -DWITH_AIO=OFF \
+      -DWITH_ZSTD=OFF \
+      -DHAVE_DNS_SD=OFF \
+      -DENABLE_IPV6=ON \
+      -DCSHARP_BINDINGS=OFF \
+      -DPYTHON_BINDINGS=OFF; \
+    cmake --build libiio-build -j2; \
+    cmake --install libiio-build; \
+    rm -rf libiio-src libiio-build
+
+# --- Stage 4: libsoundio cross-built into sysroot ---
+RUN set -eux; \
+    mkdir -p soundio-src; \
+    curl -fsSL -o soundio.tar.gz \
+      "https://github.com/andrewrk/libsoundio/archive/refs/tags/2.0.0.tar.gz"; \
+    tar -xf soundio.tar.gz -C soundio-src --strip-components=1; \
+    rm soundio.tar.gz; \
+    cmake -S soundio-src -B soundio-build -G Ninja \
+      -DCMAKE_TOOLCHAIN_FILE=/src/cmake/toolchain-armv7-bootlin.cmake \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_INSTALL_PREFIX="${SYSROOT}/usr" \
+      -DBUILD_TESTS=OFF \
+      -DBUILD_EXAMPLES=OFF \
+      -DBUILD_STATIC_LIBS=OFF; \
+    cmake --build soundio-build -j2; \
+    cmake --install soundio-build; \
+    rm -rf soundio-src soundio-build
+
+# --- Stage 5: Workspace cross-build ---
+COPY . /src/gnuradio4-workspace
+WORKDIR /src/gnuradio4-workspace
+
+RUN set -eux; \
+    cmake --preset cross_armv7 -DBUILD_CONFIG=sdk; \
+    cmake --build build/cross-armv7 -j2; \
+    cmake --install build/cross-armv7 --prefix /opt/gnuradio4; \
+    cp build/cross-armv7/src/gnuradio4 /opt/gnuradio4/bin/gnuradio4
+
+RUN "$TOOLCHAIN_ROOT/bin/${TRIPLE}-strip" /opt/gnuradio4/bin/gnuradio4 2>/dev/null || true
+ENTRYPOINT ["/opt/gnuradio4/bin/gnuradio4"]

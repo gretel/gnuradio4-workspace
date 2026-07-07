@@ -1,0 +1,282 @@
+# SPDX-License-Identifier: MIT
+mainmenu "GNU Radio 4 Configuration"
+
+# Invisible — set by --preset cross_armv7 / cross_aarch64 (via cacheVariables).
+# When ON, defaults below switch to cross-friendly values (no audio, TBB, tests).
+config BUILD_MODE_CROSS
+    bool
+    default n
+
+menu "Core SDK"
+config ENABLE_GR4_CORE
+    bool "gnuradio4-core (runtime, scheduler, blocklib, meta)"
+    default y
+    select ENABLE_GR4_ALGORITHM
+    select ENABLE_GR4_BLOCKS
+    help
+        GNU Radio 4.0 core: runtime, scheduler, lock-free buffers, block
+        development framework, blocklib generator, meta-type system, and
+        plugin infrastructure.
+
+config ENABLE_GR4_ALGORITHM
+    bool "gnuradio4-algorithm (DSP / algorithm library)"
+    depends on ENABLE_GR4_CORE
+    default y
+    help
+        Reusable non-block DSP and algorithm libraries split out of GNU Radio 4.
+        Builds against gnuradio4-core SDK. Installs CMake package 'gnuradio4Algorithm'.
+
+config ENABLE_GR4_BLOCKS
+    bool "gnuradio4-blocks (standard MIT-licensed block library)"
+    depends on ENABLE_GR4_ALGORITHM
+    default y
+    help
+        Standard MIT-licensed GNU Radio 4 block libraries (audio, SDR, debug,
+        math, misc, etc.). Builds against installed gnuradio4-core and
+        gnuradio4Algorithm SDKs.
+endmenu
+
+menu "Extensions"
+config ENABLE_GR4_INCUBATOR
+    bool "gr4-incubator (IIO, SoapySDR, PFB, audio)"
+    depends on ENABLE_GR4_CORE
+    select ENABLE_HTTP
+    help
+        Staging area for GR4 block development: IIO (PlutoSDR/FISH Ball),
+        SoapySDR blocks, polyphase filterbank, and experimental audio blocks.
+        Blocks are upstreamed to gnuradio4-blocks when mature.
+
+config ENABLE_GR4_CONTROL_PLANE
+    bool "gr4-control-plane (REST API server)"
+    depends on ENABLE_GR4_CORE
+    select ENABLE_HTTP
+    help
+        REST API server for remote flowgraph control, block introspection,
+        and dynamic reconfiguration.
+
+config ENABLE_GR4_STUDIO
+    bool "gr4-studio (Web UI)"
+    depends on ENABLE_GR4_CONTROL_PLANE
+    help
+        npm-based Web GUI served by the control-plane.
+
+config CUSTOM_EP_ENABLE
+    bool "Add a custom ExternalProject repo"
+    default n
+    help
+        Add your own git repo as an ExternalProject alongside the standard
+        gnuradio4 repos. Fill in name, URL, tag, and deps below.
+        After configure, the repo is fetched and built on cmake --build.
+
+if CUSTOM_EP_ENABLE
+
+config CUSTOM_EP_NAME
+    string "Repo name"
+    default "my-blocks"
+    help
+        Short name used as the CMake target and checkout directory.
+
+config CUSTOM_EP_URL
+    string "Git URL"
+    default ""
+    help
+        Full git clone URL, e.g. https://github.com/user/repo.git
+
+config CUSTOM_EP_TAG
+    string "Git ref (tag/branch/commit)"
+    default "main"
+
+config CUSTOM_EP_DEPENDS
+    string "Dependencies (space-separated target names)"
+    default "gnuradio4-core"
+    help
+        CMake target names this repo depends on, e.g.
+        "gnuradio4-core gnuradio4-algorithm"
+
+endif
+endmenu
+
+menu "Features"
+    depends on ENABLE_GR4_CORE
+
+config ENABLE_HTTP
+    bool "HTTP / REST API core support"
+    default y if !BUILD_MODE_CROSS
+    default n if BUILD_MODE_CROSS
+    help
+        Adds cpp-httplib dependency. Enables HTTP blocks and REST API support
+        in the core runtime. Required by control-plane and incubator (they
+        select this automatically).
+
+config ENABLE_BLOCK_REGISTRY
+    bool "Block registry (runtime introspection)"
+    default y if !BUILD_MODE_CROSS
+    default n if BUILD_MODE_CROSS
+    help
+        Enables a runtime registry of blocks. Turning this off gives fully
+        static builds. Generates JSON block metadata at build time.
+        Required by plugin system and Python bindings.
+
+config ENABLE_BLOCK_PLUGINS
+    bool "Shared library block plugins"
+    depends on ENABLE_BLOCK_REGISTRY
+    default n
+    help
+        Load blocks from .dylib / .so at runtime via the plugin system.
+        Requires block registry to generate the plugin metadata.
+
+config ENABLE_TBB
+    bool "Intel TBB parallelism"
+    depends on !BUILD_MODE_CROSS
+    default n
+    help
+        Enables the TBB dependency for std::execution::par parallel policies.
+        Gives better performance on multi-core CPUs but adds a dependency.
+        Not available in cross-compilation builds.
+
+config ENABLE_PYTHON
+    bool "Python bindings (pybind11 / NumPy)"
+    default n
+    help
+        Builds Python bindings via pybind11 for runtime and block
+        introspection from Python scripts and Jupyter notebooks.
+
+config ENABLE_AUDIO
+    bool "Audio I/O blocks (libsoundio)"
+    depends on !BUILD_MODE_CROSS
+    default y if !BUILD_MODE_CROSS
+    default n if BUILD_MODE_CROSS
+    help
+        Build the audio block family (AudioSource / AudioSink) via libsoundio.
+        Requires libsoundio development package.
+        Not available in cross-compilation builds.
+        Passed as GR4_ENABLE_AUDIO to gnuradio4-blocks.
+
+config ENABLE_SDR
+    bool "SDR block family (SoapySDR)"
+    default n
+    help
+        Build the SDR block family (SoapySDR-based sources/sinks).
+        Requires SoapySDR development package at build time.
+        Passed as GR4_ENABLE_SDR to gnuradio4-blocks.
+
+config ENABLE_MIT_ONLY
+    bool "Exclude non-MIT/Apache-2.0 licensed modules"
+    default n
+    help
+        Exclude modules with non-MIT/Apache-compatible licences.
+        Drops GPL/LGPL-only blocks from the build.
+endmenu
+
+menu "Build"
+
+config ENABLE_TESTING
+    bool "gnuradio4 test suite (qa_*, ~100 targets)"
+    default y if !BUILD_MODE_CROSS
+    default n if BUILD_MODE_CROSS
+    help
+        Enable the GNU Radio 4 test suite (qa_* targets).
+        Passed to gnuradio4-core, gnuradio4-algorithm, and gnuradio4-blocks.
+        Disabled by default in cross-compilation.
+
+
+
+config ENABLE_EXAMPLES
+    bool "Build examples"
+    default y if !BUILD_MODE_CROSS
+    default n if BUILD_MODE_CROSS
+    help
+        Build example programs from gnuradio4-core and gnuradio4-blocks.
+        Disabled by default in cross-compilation.
+
+config ENABLE_COVERAGE
+    bool "Code coverage (-coverage)"
+    depends on ENABLE_TESTING
+    default n
+    help
+        Enable code coverage instrumentation for the core test suite.
+        Requires ENABLE_TESTING. Passed as ENABLE_COVERAGE to
+        gnuradio4-core.
+
+config WARNINGS_AS_ERRORS
+    bool "-Werror (warnings as errors)"
+    default y
+    help
+        Treats all compiler warnings as errors (-Werror). Passed as
+        WARNINGS_AS_ERRORS to gnuradio4-core and gr4-incubator.
+
+config TIMETRACE
+    bool "Clang -ftime-trace (per-TU timings)"
+    default n
+    help
+        Activates Clang's -ftime-trace for per-file compilation timing.
+        Generates .json trace files for each translation unit.
+        View with Chrome DevTools or Speedscope. Only works with Clang.
+
+choice
+    prompt "Caching"
+    default CACHE_CCACHE
+
+config CACHE_NONE
+    bool "None"
+
+config CACHE_CCACHE
+    bool "ccache"
+
+config CACHE_SCCACHE
+    bool "sccache"
+endchoice
+
+config BUILD_JOBS
+    int "Parallel compile jobs (0 = all cores)"
+    range 0 64
+    default 4
+
+choice
+    prompt "Sanitizer"
+    default SANITIZER_NONE
+
+config SANITIZER_NONE
+    bool "None"
+
+config SANITIZER_ADDRESS
+    bool "AddressSanitizer"
+    help
+        Enables AddressSanitizer. Cannot be combined with other sanitizer
+        options. Catches buffer overflows, use-after-free, and other memory
+        bugs at runtime.
+
+config SANITIZER_UB
+    bool "UndefinedBehaviorSanitizer"
+    help
+        Enables UndefinedBehaviorSanitizer. Checks for signed overflow,
+        misaligned access, null pointer arithmetic, and similar UB.
+
+config SANITIZER_THREAD
+    bool "ThreadSanitizer"
+    help
+        Enables ThreadSanitizer for data race detection. Strong impact on
+        performance. Catches race conditions in multi-threaded code.
+endchoice
+endmenu
+
+menu "Dependencies"
+config USE_FETCHCONTENT
+    bool "FetchContent for missing deps"
+    default y
+    help
+        Allow CMake to download selected third-party dependencies (kiss_fft,
+        fmt, Boost.UT, etc.) via FetchContent when not found on the system.
+        In CI, enables automatic dependency resolution for test-only deps.
+        Passed as GR_USE_FETCHCONTENT_DEPS to all sub-projects.
+
+config USE_SYSTEM_DEPS
+    bool "Require system packages only"
+    default n
+    help
+        Fail configure if any dependency is not installed system-wide.
+        Disables FetchContent fallback. Forces all dependencies to be
+        pre-installed on the system.
+endmenu
+
+

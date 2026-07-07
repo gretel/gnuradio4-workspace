@@ -1,0 +1,7 @@
+brew "llvm"
+brew "cmake"
+brew "ninja"
+brew "ccache"
+brew "pkgconf"
+brew "libsoundio"
+brew "cpp-httplib"

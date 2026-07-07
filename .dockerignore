@@ -1,0 +1,6 @@
+build/
+tmp/
+.git/
+.DS_Store
+*.dylib
+*.so

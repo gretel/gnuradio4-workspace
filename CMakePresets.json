@@ -1,0 +1,103 @@
+{
+  "version": 8,
+  "cmakeMinimumRequired": { "major": 3, "minor": 27, "patch": 0 },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "generator": "Ninja",
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+      }
+    },
+    {
+      "name": "macos",
+      "displayName": "macOS (Homebrew LLVM)",
+      "inherits": "base",
+      "binaryDir": "${sourceDir}/build/dev",
+      "toolchainFile": "${sourceDir}/cmake/toolchain-macos-homebrew-llvm.cmake",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      }
+    },
+    {
+      "name": "linux",
+      "displayName": "Linux (system gcc/clang)",
+      "inherits": "base",
+      "binaryDir": "${sourceDir}/build/dev",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "windows",
+      "displayName": "Windows (LLVM MinGW / clang++)",
+      "inherits": "base",
+      "binaryDir": "${sourceDir}/build/dev",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      },
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "clang++",
+        "CMAKE_C_COMPILER": "clang",
+        "CONFIG_USE_FETCHCONTENT": "y",
+        "CONFIG_ENABLE_HTTP": "n",
+        "CONFIG_ENABLE_BLOCK_REGISTRY": "n",
+        "CONFIG_ENABLE_BLOCK_PLUGINS": "n",
+        "CONFIG_WARNINGS_AS_ERRORS": "n"
+      }
+    },
+    {
+      "name": "cross_armv7",
+      "displayName": "Cross armv7-eabihf (PlutoSDR / FISH Ball)",
+      "inherits": "base",
+      "binaryDir": "${sourceDir}/build/cross-armv7",
+      "toolchainFile": "${sourceDir}/cmake/toolchain-armv7-bootlin.cmake",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CONFIG_BUILD_MODE_CROSS": "y"
+      }
+    },
+    {
+      "name": "cross_aarch64",
+      "displayName": "Cross aarch64 (Raspberry Pi 4/5)",
+      "inherits": "base",
+      "binaryDir": "${sourceDir}/build/cross-aarch64",
+      "toolchainFile": "${sourceDir}/cmake/toolchain-aarch64-bootlin.cmake",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CONFIG_BUILD_MODE_CROSS": "y"
+      }
+    }
+  ],
+  "buildPresets": [
+    { "name": "macos",         "configurePreset": "macos",         "jobs": 0 },
+    { "name": "linux",         "configurePreset": "linux",         "jobs": 0 },
+    { "name": "windows",       "configurePreset": "windows",       "jobs": 0 },
+    { "name": "cross_armv7",   "configurePreset": "cross_armv7",   "jobs": 0 },
+    { "name": "cross_aarch64", "configurePreset": "cross_aarch64", "jobs": 0 }
+  ],
+  "testPresets": [
+    { "name": "macos", "configurePreset": "macos",
+      "output": { "outputOnFailure": true }, "execution": { "jobs": 0 } },
+    { "name": "linux", "configurePreset": "linux",
+      "output": { "outputOnFailure": true }, "execution": { "jobs": 0 } }
+  ],
+  "workflowPresets": [
+    { "name": "macos", "steps": [
+      { "type": "configure", "name": "macos" },
+      { "type": "build",    "name": "macos" },
+      { "type": "test",     "name": "macos" } ] },
+    { "name": "linux", "steps": [
+      { "type": "configure", "name": "linux" },
+      { "type": "build",    "name": "linux" },
+      { "type": "test",     "name": "linux" } ] }
+  ]
+}

@@ -1,0 +1,133 @@
+# SPDX-License-Identifier: MIT
+name: CI
+
+on:
+  pull_request:
+    paths-ignore: ['**.md']
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ── GitHub-hosted runners: macOS + Linux ──
+  build:
+    name: "${{ matrix.os }} / ${{ matrix.config }}"
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15, ubuntu-24.04]
+        config: [sdk, ci]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+      - name: Install deps
+        run: |
+          if [ "$RUNNER_OS" = "macOS" ]; then
+            brew install llvm cmake ninja ccache libsoundio cpp-httplib
+          else
+            sudo apt-get update && \
+              sudo apt-get install -y cmake ninja-build ccache g++-14 \
+                libsoundio-dev libcpp-httplib-dev
+          fi
+      - name: Configure
+        env:
+          CC: ${{ runner.os == 'macOS' && 'clang' || 'gcc-14' }}
+          CXX: ${{ runner.os == 'macOS' && 'clang++' || 'g++-14' }}
+        run: >
+          cmake --preset ${{ runner.os == 'macOS' && 'macos' || 'linux' }}
+          -DBUILD_CONFIG=${{ matrix.config }}
+      - name: Build
+        run: cmake --build build/dev
+      - name: Smoke test
+        if: matrix.config == 'ci'
+        run: ./build/dev/src/gnuradio4
+
+  # ── Full profile (main branch only) ──
+  full:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+      - name: Install deps
+        run: |
+          sudo apt-get update && \
+          sudo apt-get install -y cmake ninja-build ccache g++-14 \
+            libsoundio-dev libcpp-httplib-dev
+      - name: Configure
+        env:
+          CC: gcc-14
+          CXX: g++-14
+        run: cmake --preset linux -DBUILD_CONFIG=full
+      - name: Build
+        run: cmake --build build/dev
+      - name: Smoke test
+        run: ./build/dev/src/gnuradio4
+
+  # ── Self-hosted Windows (LLVM MinGW, ARM64) ──
+  windows:
+    if: github.ref == 'refs/heads/main'
+    runs-on: [self-hosted, windows, arm64]
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+      - name: Configure (sdk)
+        run: |
+          cmake --preset windows -DBUILD_CONFIG=sdk
+      - name: Build
+        run: cmake --build build/dev
+      - name: Smoke test
+        run: .\build\dev\src\gnuradio4.exe
+
+  # ── Docker: Linux native build ──
+  docker-linux:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+      - name: Build SDK image
+        run: docker build -f Dockerfile -t gr4-test:sdk .
+      - name: Smoke test
+        run: docker run --rm gr4-test:sdk
+
+  # ── Docker: cross armv7 ──
+  docker-armv7:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+      - name: Build cross-armv7 image
+        run: docker build -f docker/Dockerfile.cross-armv7 -t gr4-test:armv7 .
+      - name: Verify ARM32 binary
+        run: |
+          docker run --rm --entrypoint file gr4-test:armv7 /opt/gnuradio4/bin/gnuradio4 | tee /tmp/armv7-check.txt
+          grep -q 'ELF 32-bit.*ARM' /tmp/armv7-check.txt
+          echo 'cross-armv7: valid ARMv7 binary'
+
+  # ── Docker: cross aarch64 ──
+  docker-aarch64:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+      - name: Build cross-aarch64 image
+        run: docker build -f docker/Dockerfile.cross-aarch64 -t gr4-test:aarch64 .
+      - name: Verify AARCH64 binary
+        run: |
+          docker run --rm --entrypoint file gr4-test:aarch64 /opt/gnuradio4/bin/gnuradio4 | tee /tmp/aarch64-check.txt
+          grep -q 'ELF 64-bit.*ARM aarch64' /tmp/aarch64-check.txt
+          echo 'cross-aarch64: valid AARCH64 binary'

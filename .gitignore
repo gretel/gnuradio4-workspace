@@ -1,0 +1,83 @@
+# ---- Build artifacts ----
+build/
+build*/
+build_*/
+cmake-build-*/
+bin/
+out/
+**/CMakeFiles/
+**/CMakeCache.txt
+**/cmake_install.cmake
+**/CTestTestfile.cmake
+compile_commands.json
+CMakeUserPresets.json
+
+# ---- Install prefix ----
+install/
+
+# ---- Conan ----
+/conan.cmake
+conan.lock
+conanbuildinfo.cmake
+conanbuildinfo.txt
+conanfile.txt
+conaninfo.txt
+graph_info.json
+
+# ---- Docker ----
+*.tar.gz
+*.tar.xz
+
+# ---- Emscripten ----
+emscripten-toolchain.ini
+node_modules/
+
+# ---- IDE / editors ----
+.idea/
+.vscode/
+.vs/
+.cache/
+*.swp
+*.swo
+*~
+CMakeLists.txt.user
+.kdev4/
+*.kdev4
+.devcontainer/
+language.settings.xml
+
+# ---- OS junk ----
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+.directory
+
+# ---- Python / venv ----
+__pycache__/
+.venv/
+virtualenv/
+*.pyc
+*.egg-info/
+dist/
+
+# ---- Tooling ----
+*.dSYM/
+.pi/tasks/
+imgui.ini
+
+# ---- Temp / stale ----
+tmp/
+*.log
+test/
+buildcfg.log
+
+# ---- Local checkouts for ExternalProject override ----
+gnuradio4-core/
+gnuradio4-algorithm/
+gnuradio4-blocks/
+gr4-incubator/
+gr4-control-plane/
