@@ -88,39 +88,6 @@ if(WIN32 OR MINGW)
     list(APPEND _EP_COMMON_ARGS -DCMAKE_DL_LIBS="")
 endif()
 
-# gnuradio4-core specific args
-set(_EP_CORE_ARGS ${_EP_COMMON_ARGS})
-list(APPEND _EP_CORE_ARGS
-    -DENABLE_TESTING=${CONFIG_ENABLE_TESTING}
-    -DENABLE_EXAMPLES=${CONFIG_ENABLE_EXAMPLES}
-    -DWARNINGS_AS_ERRORS=${CONFIG_WARNINGS_AS_ERRORS}
-    -DENABLE_TBB=${CONFIG_ENABLE_TBB}
-    -DGR_ENABLE_BLOCK_REGISTRY=${CONFIG_ENABLE_BLOCK_REGISTRY}
-    -DINTERNAL_ENABLE_BLOCK_PLUGINS=${CONFIG_ENABLE_BLOCK_PLUGINS}
-    -DGR_USE_FETCHCONTENT_DEPS=${CONFIG_USE_FETCHCONTENT}
-    -DMIT_ONLY=${CONFIG_ENABLE_MIT_ONLY}
-    -DENABLE_COVERAGE=${CONFIG_ENABLE_COVERAGE}
-    -DTIMETRACE=${CONFIG_TIMETRACE}
-    -DPARALLEL_LEVEL=${CONFIG_BUILD_JOBS}
-)
-if(CONFIG_SANITIZER_ADDRESS)
-    list(APPEND _EP_CORE_ARGS -DADDRESS_SANITIZER=ON)
-endif()
-if(CONFIG_SANITIZER_UB)
-    list(APPEND _EP_CORE_ARGS -DUB_SANITIZER=ON)
-endif()
-if(CONFIG_SANITIZER_THREAD)
-    list(APPEND _EP_CORE_ARGS -DTHREAD_SANITIZER=ON)
-endif()
-
-# gnuradio4-algorithm specific args
-set(_EP_ALGORITHM_ARGS ${_EP_COMMON_ARGS})
-list(APPEND _EP_ALGORITHM_ARGS
-    -DENABLE_TESTING=${CONFIG_ENABLE_TESTING}
-    -DENABLE_EXAMPLES=${CONFIG_ENABLE_EXAMPLES}
-    -DGR_USE_FETCHCONTENT_DEPS=${CONFIG_USE_FETCHCONTENT}
-)
-
 # ---- Git tag/ref for all GR4 ExternalProject repos ----
 # Override with -DGR4_GIT_TAG=<sha> in CI for reproducible builds.
 set(GR4_GIT_TAG "main" CACHE STRING "Git ref for all gnuradio4 ExternalProject repos")
@@ -177,61 +144,15 @@ macro(gr4_ep name)
     unset(_dl_args)
 endmacro()
 
-# ==== Build the three split repos in order ====
+# ==== Include per-repo cmake files in dependency order ====
+# Each file is guarded by its CONFIG_ENABLE_* flag internally.
 
-# 1. gnuradio4-core — runtime, scheduler, blocklib, meta
-if(CONFIG_ENABLE_GR4_CORE)
-    gr4_ep(gnuradio4-core
-        CMAKE_ARGS ${_EP_CORE_ARGS}
-    )
-endif()
-
-# 2. gnuradio4-algorithm — DSP / algorithm library (depends on core)
-if(CONFIG_ENABLE_GR4_ALGORITHM)
-    gr4_ep(gnuradio4-algorithm
-        CMAKE_ARGS ${_EP_ALGORITHM_ARGS}
-        DEPENDS gnuradio4-core
-    )
-endif()
-
-# 3. gnuradio4-blocks — block implementations (depends on core + algorithm)
-if(CONFIG_ENABLE_GR4_BLOCKS)
-    set(_EP_BLOCKS_ARGS
-        ${_EP_ALGORITHM_ARGS}
-        -DGR4_ENABLE_AUDIO=${CONFIG_ENABLE_AUDIO}
-        -DGR4_ENABLE_SDR=${CONFIG_ENABLE_SDR}
-        -DGR4_ENABLE_HTTP_TESTS=${CONFIG_ENABLE_HTTP}
-    )
-    gr4_ep(gnuradio4-blocks
-        CMAKE_ARGS ${_EP_BLOCKS_ARGS}
-        DEPENDS gnuradio4-algorithm
-    )
-endif()
-
-# ---- gr4-incubator (IIO, SoapySDR, PFB, audio blocks) ----
-if(CONFIG_ENABLE_GR4_INCUBATOR)
-    gr4_ep(gr4-incubator
-        CMAKE_ARGS
-            ${_EP_COMMON_ARGS}
-            -DENABLE_TESTING=${CONFIG_ENABLE_TESTING}
-            -DENABLE_EXAMPLES=${CONFIG_ENABLE_EXAMPLES}
-            -DWARNINGS_AS_ERRORS=${CONFIG_WARNINGS_AS_ERRORS}
-            -DGR_USE_FETCHCONTENT_DEPS=${CONFIG_USE_FETCHCONTENT}
-        DEPENDS gnuradio4-core
-    )
-endif()
-
-# ---- gr4-control-plane (REST API server) ----
-if(CONFIG_ENABLE_GR4_CONTROL_PLANE)
-    gr4_ep(gr4-control-plane
-        GIT_REPO gnuradio4-control-plane
-        CMAKE_ARGS
-            ${_EP_COMMON_ARGS}
-            -DENABLE_TESTING=${CONFIG_ENABLE_TESTING}
-            -DGR_USE_FETCHCONTENT_DEPS=${CONFIG_USE_FETCHCONTENT}
-        DEPENDS gnuradio4-core
-    )
-endif()
+include(${CMAKE_SOURCE_DIR}/cmake/repos/gnuradio4-core.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/repos/gnuradio4-algorithm.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/repos/gnuradio4-blocks.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/repos/gr4-incubator.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/repos/gr4-control-plane.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/repos/workspace.cmake)
 
 # ---- Custom ExternalProject repo (from Kconfig) ----
 if(CUSTOM_EP_ENABLE AND DEFINED CUSTOM_EP_URL AND NOT "${CUSTOM_EP_URL}" STREQUAL "")
@@ -258,43 +179,6 @@ if(CUSTOM_EP_ENABLE AND DEFINED CUSTOM_EP_URL AND NOT "${CUSTOM_EP_URL}" STREQUA
         EXCLUDE_FROM_ALL TRUE
     )
     unset(_custom_name _custom_depends)
-endif()
-
-# ---- Workspace tools (diagnostic binary + smoke tests) ----
-# Builds after all sub-projects; finds their installed cmake configs.
-# NOTE: DEPENDS list must be built with if() not generator expressions -
-# ExternalProject_Add resolves DEPENDS at configure time, not generation time.
-if(CONFIG_ENABLE_GR4_CORE)
-    set(_WORKSPACE_DEPENDS gnuradio4-core)
-    if(CONFIG_ENABLE_GR4_ALGORITHM)
-        list(APPEND _WORKSPACE_DEPENDS gnuradio4-algorithm)
-    endif()
-    if(CONFIG_ENABLE_GR4_BLOCKS)
-        list(APPEND _WORKSPACE_DEPENDS gnuradio4-blocks)
-    endif()
-    ExternalProject_Add(workspace
-        SOURCE_DIR "${CMAKE_SOURCE_DIR}/workspace"
-        PREFIX "${CMAKE_BINARY_DIR}/_deps/workspace"
-        BINARY_DIR "${CMAKE_BINARY_DIR}/workspace"
-        INSTALL_DIR "${_INSTALL_PREFIX}"
-        INSTALL_COMMAND ""
-        CMAKE_ARGS
-            -DCMAKE_INSTALL_PREFIX=${_INSTALL_PREFIX}
-            -DCMAKE_PREFIX_PATH=${_INSTALL_PREFIX}
-            -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-            -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-            -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-            -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
-            -DGIT_REV=${GIT_REV}
-            -DWORKSPACE_VERSION=${PROJECT_VERSION}
-        DEPENDS ${_WORKSPACE_DEPENDS}
-    )
-    unset(_WORKSPACE_DEPENDS)
-endif()
-
-# ---- Top-level convenience alias ----
-if(TARGET gnuradio4-core AND TARGET workspace)
-    add_custom_target(all-gr4 ALL DEPENDS workspace)
 endif()
 
 # ---- update-deps: refresh fetched ExternalProject repos ----
