@@ -148,9 +148,12 @@ config ENABLE_AUDIO
     default n if BUILD_MODE_CROSS
     help
         Build the audio block family (AudioSource / AudioSink) via libsoundio.
-        Requires libsoundio development package.
+        Requires libsoundio development package with cmake or pkg-config support.
         Not available in cross-compilation builds.
         Passed as GR4_ENABLE_AUDIO to gnuradio4-blocks.
+        NOTE (2026-07): upstream blocks/audio references gnuradio4::gr-libsoundio
+        which gnuradio4-core no longer provides. Temporarily disabled in full
+        profile until the target is re-added or a proper find module is created.
 
 config ENABLE_SDR
     bool "SDR block family (SoapySDR)"
@@ -278,5 +281,3 @@ config USE_SYSTEM_DEPS
         Disables FetchContent fallback. Forces all dependencies to be
         pre-installed on the system.
 endmenu
-
-
