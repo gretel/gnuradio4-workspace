@@ -6,38 +6,27 @@ Superbuild for the GNU Radio 4.0 split-repo ecosystem.
 gnuradio4-core ──→ gnuradio4-algorithm ──→ gnuradio4-blocks ──→ workspace/
 ```
 
-Builds three repos in dependency order via `ExternalProject_Add`, each installing
-to a shared prefix. The `workspace/` directory is where you build your own
-flowgraph apps against the installed SDK.
+Builds three repos in dependency order via `ExternalProject_Add`, each installing to a shared prefix. The `workspace/` directory is where you build your own flowgraph apps against the installed SDK.
 
 ## Quick start
 
-Configure, build, and smoke-test with one platform preset. Missing deps are
-fetched automatically (see [Prerequisites](#prerequisites) for optional system
-deps).
+Configure, build, and smoke-test with one platform preset. Missing deps are fetched automatically (see [Prerequisites](#prerequisites) for optional system deps).
 
 ```sh
 # ── macOS ──
 cmake --preset macos -DBUILD_CONFIG=sdk
 cmake --build build/dev
-./build/dev/src/gnuradio4                           # diagnostic binary
-
 # ── Linux (requires gcc-14 / clang-20 as default) ──
 CC=gcc-14 CXX=g++-14 cmake --preset linux -DBUILD_CONFIG=sdk
 cmake --build build/dev
-./build/dev/src/gnuradio4
-
 # ── Windows (ARM64 or x86_64, requires LLVM MinGW) ──
 cmake --preset windows -DBUILD_CONFIG=sdk
 cmake --build build/dev
-.\build\dev\src\gnuradio4.exe
 ```
 
 > **Windows notes**
 > - Install prerequisites with `winget` (see below).
-> - Block registry and plugins are disabled by default (COFF linking model
->   works differently — see `CONFIG_ENABLE_BLOCK_REGISTRY` /
->   `CONFIG_ENABLE_BLOCK_PLUGINS` in the Windows preset).
+> - Block registry and plugins are disabled by default (COFF linking model works differently — see `CONFIG_ENABLE_BLOCK_REGISTRY` / `CONFIG_ENABLE_BLOCK_PLUGINS` in the Windows preset).
 > - `cmake --workflow` is not yet wired for Windows (no test preset).
 
 ## Quick reference
@@ -52,6 +41,22 @@ cmake --build build/dev
 | `cmake --workflow --preset macos` | configure + build + test, one shot (macOS / Linux only) |
 | `cmake --build build/dev --target update-deps` | git pull --ff-only in each fetched ExternalProject repo |
 | `ctest --test-dir build/dev/workspace --output-on-failure` | workspace smoke tests |
+| `cmake --install build/dev --prefix <path>` | copy SDK to a stable path (e.g. `/opt/gnuradio4`) for shared reuse |
+
+## SDK install
+
+Downstream CMakeLists.txt:
+
+```cmake
+find_package(gnuradio4 CONFIG REQUIRED)
+target_link_libraries(my_app PRIVATE gnuradio4::gnuradio-core)
+```
+
+Point `CMAKE_PREFIX_PATH` at the build output (`build/dev/_install/`). To move it to a stable system path:
+
+```sh
+cmake --install build/dev --prefix /opt/gnuradio4
+```
 
 ## Build profiles
 
@@ -63,8 +68,7 @@ Three profiles in `configs/` control what gets built:
 | `ci`   | `ci_defconfig`   | + tests + Werror + audio |
 | `full` | `full_defconfig` | Full SDK: control-plane, audio, tests, examples |
 
-The SDK profile is the default. `CONFIG_ENABLE_GR4_CORE=y` auto-selects
-algorithm + blocks via Kconfig dependency chains.
+The SDK profile is the default. `CONFIG_ENABLE_GR4_CORE=y` auto-selects algorithm + blocks via Kconfig dependency chains.
 
 ## Build hierarchy
 
@@ -94,41 +98,32 @@ rm -rf build/cross-armv7
 rm -rf build/cross-aarch64
 ```
 
-After a full wipe (`rm -rf build/dev`), the next `cmake --preset …` will
-re-fetch all external sources and start from scratch. This is also the correct
-way to switch between `BUILD_CONFIG` profiles — reconfigure from a clean
-directory.
+After a full wipe (`rm -rf build/dev`), the next `cmake --preset …` will re-fetch all external sources and start from scratch. This is also the correct way to switch between `BUILD_CONFIG` profiles — reconfigure from a clean directory.
 
 ## CI builds (pinning dependencies)
 
-By default all ExternalProject repos track `main`. For reproducible CI runs, pin
-to a specific commit via `-DGR4_GIT_TAG=<sha>`:
+By default all ExternalProject repos track `main`. For reproducible CI runs, pin to a specific commit via `-DGR4_GIT_TAG=<sha>`:
 
 ```sh
 cmake --preset macos -DBUILD_CONFIG=ci -DGR4_GIT_TAG=abc1234
 ```
 
-This applies the same ref to all three repos (core, algorithm, blocks).
-Reconfigure with a clean build dir to force re-fetch.
+This applies the same ref to all three repos (core, algorithm, blocks). Reconfigure with a clean build dir to force re-fetch.
 
 ## Updating ExternalProject dependencies
 
-The upstream repos are fetched at configure time and cached in
-`build/dev/_deps/<name>/src/<name>/`. By default, CMake skips the update step
-on reconfigure (`EP_UPDATE_DISCONNECTED=ON`).
+The upstream repos are fetched at configure time and cached in `build/dev/_deps/<name>/src/<name>/`. By default, CMake skips the update step on reconfigure (`EP_UPDATE_DISCONNECTED=ON`).
 
 ### Fast update (git pull)
 
-Pull latest from each fetched repo (respects `GR4_GIT_TAG`, works with shallow
-clones):
+Pull latest from each fetched repo (respects `GR4_GIT_TAG`, works with shallow clones):
 
 ```sh
 cmake --build build/dev --target update-deps
 cmake --build build/dev           # rebuild
 ```
 
-This runs `git pull --ff-only` in each cached source dir. Skips repos that
-haven't been fetched yet or are using local checkouts.
+This runs `git pull --ff-only` in each cached source dir. Skips repos that haven't been fetched yet or are using local checkouts.
 
 ### Full re-fetch
 
@@ -196,19 +191,13 @@ winget install -e --id bloodrock.pkg-config-lite
 | [gnuradio4-algorithm](https://github.com/gnuradio/gnuradio4-algorithm) | DSP / algorithm library |
 | [gnuradio4-blocks](https://github.com/gnuradio/gnuradio4-blocks) | Standard MIT-licensed block implementations (audio, SDR, etc.) |
 
-Place a local checkout at repo root (e.g. `gnuradio4-core/CMakeLists.txt`) to
-override GitHub fetch — the superbuild uses it as `SOURCE_DIR` automatically.
+Place a local checkout at repo root (e.g. `gnuradio4-core/CMakeLists.txt`) to override GitHub fetch — the superbuild uses it as `SOURCE_DIR` automatically.
 
 ## Lint
 
 ```sh
 prek run --all-files
 ```
-
-## See also
-
-- [`AGENTS.md`](AGENTS.md) — detailed build architecture, component dependencies,
-  cross-compilation guide, and development workflows.
 
 ## License
 

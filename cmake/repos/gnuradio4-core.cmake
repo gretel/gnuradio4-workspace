@@ -22,7 +22,6 @@ if(CONFIG_ENABLE_GR4_CORE)
         -DMIT_ONLY=${CONFIG_ENABLE_MIT_ONLY}
         -DENABLE_COVERAGE=${CONFIG_ENABLE_COVERAGE}
         -DTIMETRACE=${CONFIG_TIMETRACE}
-        -DPARALLEL_LEVEL=${CONFIG_BUILD_JOBS}
     )
     if(CONFIG_SANITIZER_ADDRESS)
         list(APPEND _EP_CORE_ARGS -DADDRESS_SANITIZER=ON)
@@ -34,7 +33,16 @@ if(CONFIG_ENABLE_GR4_CORE)
         list(APPEND _EP_CORE_ARGS -DTHREAD_SANITIZER=ON)
     endif()
 
+    # Windows/MinGW: httplib may not be installed; provide stub path
+    if(WIN32 OR MINGW)
+        list(APPEND _EP_CORE_ARGS "-DCMAKE_PREFIX_PATH=${CMAKE_BINARY_DIR}/httplib-stub")
+    endif()
+    set(_GR4_EP_GIT_TAG "interim/windows-test")
+    set(_GR4_EP_GIT_REPO_BASE "gretel")
     gr4_ep(gnuradio4-core
         CMAKE_ARGS ${_EP_CORE_ARGS}
     )
+    # Reset to defaults so subsequent repos don't inherit
+    set(_GR4_EP_GIT_TAG "${GR4_GIT_TAG}")
+    set(_GR4_EP_GIT_REPO_BASE "gnuradio")
 endif()

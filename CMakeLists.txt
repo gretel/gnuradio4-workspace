@@ -35,7 +35,7 @@ if(NOT BUILD_CONFIG)
 endif()
 include(kconfig)
 
-# ---- Git revision ----
+# ---- Git revision (updated at build time) ----
 execute_process(
     COMMAND git rev-parse --short HEAD
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
@@ -43,6 +43,17 @@ execute_process(
 if(NOT GIT_REV)
     set(GIT_REV "unknown")
 endif()
+
+# Build-time GIT_REV update: forces re-generation on each build
+# Uses a cmake -P script for resilience — writes "unknown" when .git absent.
+set(GIT_REV_FILE "${CMAKE_BINARY_DIR}/GIT_REV.txt")
+file(WRITE "${GIT_REV_FILE}" "${GIT_REV}")
+add_custom_target(update_git_rev ALL
+    COMMAND ${CMAKE_COMMAND} -DPATH="${CMAKE_SOURCE_DIR}" -DOUTFILE=${GIT_REV_FILE}
+        -P "${CMAKE_SOURCE_DIR}/cmake/update_git_rev.cmake"
+    BYPRODUCTS "${GIT_REV_FILE}"
+    COMMENT "Updating GIT_REV (build-time)"
+    VERBATIM)
 
 # ---- Platform-specific defaults (for this superbuild, not sub-projects) ----
 if(APPLE AND CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
@@ -59,7 +70,11 @@ if(WIN32 OR MINGW)
 endif()
 
 # ---- Shared install prefix for all sub-projects ----
-set(_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/_install")
+# Default: ephemeral build-dir install. Override with -DGR4_INSTALL_PREFIX
+# for a stable SDK install path (e.g. /opt/gnuradio4).
+set(GR4_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/_install"
+    CACHE STRING "Install prefix for gnuradio4 SDK sub-projects (set to /opt/gnuradio4 for stable SDK)")
+set(_INSTALL_PREFIX "${GR4_INSTALL_PREFIX}")
 file(MAKE_DIRECTORY "${_INSTALL_PREFIX}")
 
 # ---- Build ExternalProject CMAKE_ARGS lists ----
@@ -73,25 +88,72 @@ set(_EP_COMMON_ARGS
     -DCMAKE_PREFIX_PATH=${_INSTALL_PREFIX}
     -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
     -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-    -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
     -DCMAKE_CXX_STANDARD=23
     -DCMAKE_CXX_STANDARD_REQUIRED=ON
     -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE
     -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+    -DCMAKE_COLOR_DIAGNOSTICS=OFF
     -DUSE_CCACHE=${CONFIG_CACHE_CCACHE}
-    -DCMAKE_CXX_FLAGS_INIT=-Wno-psabi -Wno-error=null-dereference
+    -DCMAKE_CXX_FLAGS_INIT=-Wno-psabi
 )
 if(CMAKE_TOOLCHAIN_FILE)
     list(APPEND _EP_COMMON_ARGS -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
+    # C compiler needed for cross-compilation; on native builds sub-projects auto-detect
+    list(APPEND _EP_COMMON_ARGS -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER})
 endif()
 # Windows/MinGW: no libdl, suppress cascading -ldl link failures
 if(WIN32 OR MINGW)
     list(APPEND _EP_COMMON_ARGS -DCMAKE_DL_LIBS="")
+    list(APPEND _EP_COMMON_ARGS -DCMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM})
+endif()
+
+# MinGW: create empty libdl.a stub if llvm-ar is available.
+# MinGW platform defaults add -ldl to every link target; setting
+# CMAKE_DL_LIBS="" is not always sufficient for shared library targets.
+if(WIN32 OR MINGW)
+    find_program(_LLVM_AR llvm-ar)
+    if(_LLVM_AR)
+        get_filename_component(_MINGW_LIB "${CMAKE_CXX_COMPILER}" DIRECTORY)
+        get_filename_component(_MINGW_LIB "${_MINGW_LIB}" DIRECTORY)
+        set(_DL_STUB "${_MINGW_LIB}/libdl.a")
+        if(NOT EXISTS "${_DL_STUB}")
+            execute_process(COMMAND ${_LLVM_AR} rcs "${_DL_STUB}")
+            message(STATUS "Created MinGW libdl.a stub: ${_DL_STUB}")
+        endif()
+        unset(_DL_STUB)
+    endif()
+    unset(_LLVM_AR)
+endif()
+
+# Windows/MinGW: create httplib-stub for cpp-httplib (being removed from core)
+if(WIN32 OR MINGW)
+    set(_HTTPLIB_STUB_DIR "${CMAKE_BINARY_DIR}/httplib-stub/cmake")
+    file(MAKE_DIRECTORY "${_HTTPLIB_STUB_DIR}")
+    set(_HTTPLIB_STUB_FILE "${_HTTPLIB_STUB_DIR}/httplibConfig.cmake")
+    if(NOT EXISTS "${_HTTPLIB_STUB_FILE}")
+        file(WRITE "${_HTTPLIB_STUB_FILE}" [[
+# SPDX-License-Identifier: MIT
+# Minimal stub for cpp-httplib - provides httplib::httplib target.
+# cpp-httplib is being removed from gnuradio4-core upstream; this stub
+# allows the build to proceed without the actual library when HTTP
+# test blocks are disabled (CONFIG_ENABLE_HTTP=n).
+
+if(NOT TARGET httplib::httplib)
+    add_library(httplib::httplib INTERFACE IMPORTED)
+endif()
+]])
+        message(STATUS "Created httplib stub: ${_HTTPLIB_STUB_FILE}")
+    endif()
+    unset(_HTTPLIB_STUB_DIR)
+    unset(_HTTPLIB_STUB_FILE)
 endif()
 
 # ---- Git tag/ref for all GR4 ExternalProject repos ----
 # Override with -DGR4_GIT_TAG=<sha> in CI for reproducible builds.
 set(GR4_GIT_TAG "main" CACHE STRING "Git ref for all gnuradio4 ExternalProject repos")
+# Per-repo overrides (set in cmake/repos/*.cmake before calling gr4_ep)
+set(_GR4_EP_GIT_TAG "${GR4_GIT_TAG}")
+set(_GR4_EP_GIT_REPO_BASE "gnuradio")
 
 # Controls whether ExternalProject update step runs on reconfigure.
 # ON (default): no auto-update — use `update-deps` target explicitly.
@@ -120,8 +182,8 @@ macro(gr4_ep name)
         set(_dl_args SOURCE_DIR "${_src}")
     else()
         set(_dl_args
-            GIT_REPOSITORY "https://github.com/gnuradio/${_repo_name}.git"
-            GIT_TAG ${GR4_GIT_TAG}
+            GIT_REPOSITORY "https://github.com/${_GR4_EP_GIT_REPO_BASE}/${_repo_name}.git"
+            GIT_TAG ${_GR4_EP_GIT_TAG}
             GIT_SHALLOW TRUE)
     endif()
     unset(_repo_name)
@@ -155,6 +217,23 @@ include(${CMAKE_SOURCE_DIR}/cmake/repos/gr4-incubator.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/repos/gr4-control-plane.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/repos/workspace.cmake)
 
+# ---- install target: deploy SDK from ephemeral _INSTALL_PREFIX to stable prefix ----
+# This makes `cmake --install build/dev --prefix /opt/gnuradio4` copy the SDK
+# to a stable location for downstream find_package usage.
+# DESTINATION "." is relative to CMAKE_INSTALL_PREFIX (set via --prefix at install time).
+# When GR4_INSTALL_PREFIX was set explicitly, sub-projects already installed
+# directly to the stable path, so no copy is needed.
+if("${GR4_INSTALL_PREFIX}" STREQUAL "${CMAKE_BINARY_DIR}/_install")
+    # Default ephemeral mode — install copies from build/_install to --prefix
+    install(DIRECTORY "${CMAKE_BINARY_DIR}/_install/" DESTINATION "."
+        MESSAGE_NEVER
+        USE_SOURCE_PERMISSIONS)
+    message(STATUS "gnuradio4 SDK: cmake --install copies from ${CMAKE_BINARY_DIR}/_install")
+else()
+    # Explicit GR4_INSTALL_PREFIX — sub-projects already installed to stable path
+    message(STATUS "gnuradio4 SDK: installed directly to ${GR4_INSTALL_PREFIX} during build")
+endif()
+
 # ---- Custom ExternalProject repo (from Kconfig) ----
 if(CUSTOM_EP_ENABLE AND DEFINED CUSTOM_EP_URL AND NOT "${CUSTOM_EP_URL}" STREQUAL "")
     set(_custom_name "${CUSTOM_EP_NAME}")
@@ -170,7 +249,7 @@ if(CUSTOM_EP_ENABLE AND DEFINED CUSTOM_EP_URL AND NOT "${CUSTOM_EP_URL}" STREQUA
     endif()
 
     ExternalProject_Add(${_custom_name}
-        GIT_REPOSITORY "${CUSTOM_EP_URL}"
+            GIT_REPOSITORY "${CUSTOM_EP_URL}"
         GIT_TAG "${CUSTOM_EP_TAG}"
         GIT_SHALLOW TRUE
         PREFIX "${CMAKE_BINARY_DIR}/_deps/${_custom_name}"

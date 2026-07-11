@@ -1,6 +1,10 @@
 {
   "version": 8,
-  "cmakeMinimumRequired": { "major": 3, "minor": 27, "patch": 0 },
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 27,
+    "patch": 0
+  },
   "configurePresets": [
     {
       "name": "base",
@@ -78,26 +82,115 @@
     }
   ],
   "buildPresets": [
-    { "name": "macos",         "configurePreset": "macos",         "jobs": 0 },
-    { "name": "linux",         "configurePreset": "linux",         "jobs": 0 },
-    { "name": "windows",       "configurePreset": "windows",       "jobs": 0 },
-    { "name": "cross_armv7",   "configurePreset": "cross_armv7",   "jobs": 0 },
-    { "name": "cross_aarch64", "configurePreset": "cross_aarch64", "jobs": 0 }
+    {
+      "name": "macos",
+      "configurePreset": "macos",
+      "jobs": 0
+    },
+    {
+      "name": "linux",
+      "configurePreset": "linux",
+      "jobs": 0
+    },
+    {
+      "name": "windows",
+      "configurePreset": "windows",
+      "jobs": 0
+    },
+    {
+      "name": "cross_armv7",
+      "configurePreset": "cross_armv7",
+      "jobs": 0
+    },
+    {
+      "name": "cross_aarch64",
+      "configurePreset": "cross_aarch64",
+      "jobs": 0
+    }
   ],
   "testPresets": [
-    { "name": "macos", "configurePreset": "macos",
-      "output": { "outputOnFailure": true }, "execution": { "jobs": 0 } },
-    { "name": "linux", "configurePreset": "linux",
-      "output": { "outputOnFailure": true }, "execution": { "jobs": 0 } }
+    {
+      "name": "macos",
+      "configurePreset": "macos",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "jobs": 0
+      }
+    },
+    {
+      "name": "linux",
+      "configurePreset": "linux",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "jobs": 0
+      }
+    },
+    {
+      "name": "windows",
+      "configurePreset": "windows",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "jobs": 0
+      }
+    }
   ],
   "workflowPresets": [
-    { "name": "macos", "steps": [
-      { "type": "configure", "name": "macos" },
-      { "type": "build",    "name": "macos" },
-      { "type": "test",     "name": "macos" } ] },
-    { "name": "linux", "steps": [
-      { "type": "configure", "name": "linux" },
-      { "type": "build",    "name": "linux" },
-      { "type": "test",     "name": "linux" } ] }
+    {
+      "name": "macos",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "macos"
+        },
+        {
+          "type": "build",
+          "name": "macos"
+        },
+        {
+          "type": "test",
+          "name": "macos"
+        }
+      ]
+    },
+    {
+      "name": "linux",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "linux"
+        },
+        {
+          "type": "build",
+          "name": "linux"
+        },
+        {
+          "type": "test",
+          "name": "linux"
+        }
+      ]
+    },
+    {
+      "name": "windows",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "windows"
+        },
+        {
+          "type": "build",
+          "name": "windows"
+        },
+        {
+          "type": "test",
+          "name": "windows"
+        }
+      ]
+    }
   ]
 }

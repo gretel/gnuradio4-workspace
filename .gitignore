@@ -77,6 +77,7 @@ imgui.ini
 tmp/
 *.log
 test/
+tests/
 buildcfg.log
 
 # ---- Local checkouts for ExternalProject override ----
