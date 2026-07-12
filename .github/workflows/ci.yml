@@ -79,13 +79,10 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 1
-      - name: Configure (sdk)
-        run: |
-          cmake --preset windows -DBUILD_CONFIG=sdk
-      - name: Build
-        run: cmake --build build/dev
-      - name: Smoke test
-        run: .\build\dev\src\gnuradio4.exe
+      - name: Workflow (configure + build + smoke test)
+        env:
+          BUILD_CONFIG: sdk
+        run: cmake --workflow --preset windows
 
   # ── Docker: Linux native build ──
   docker-linux:

@@ -36,3 +36,11 @@ find_package(gnuradio4Blocks QUIET)
 if(gnuradio4Blocks_FOUND)
     message(STATUS "workspace: gnuradio4Blocks found")
 endif()
+
+# ---- Smoke test ----
+enable_testing()
+
+add_executable(gr4-smoke src/smoke.cpp)
+target_link_libraries(gr4-smoke PRIVATE gnuradio-core gnuradio-options)
+
+add_test(NAME gr4-smoke COMMAND gr4-smoke)

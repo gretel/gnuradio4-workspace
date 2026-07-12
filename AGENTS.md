@@ -14,7 +14,7 @@ ctest --test-dir build/dev/workspace --output-on-failure
 |----------|--------|-----------|-------|
 | macOS | `macos` | Homebrew LLVM (brew bundle) | `xcrun` needs Xcode CLT |
 | Linux | `linux` | system gcc-14+ / clang-20+ | C++23 required |
-| Windows | `windows` | LLVM MinGW clang++ | Block registry OFF by default |
+| Windows | `windows` | LLVM MinGW clang++ | Block registry OFF by default; `full` profile unsupported |
 | Cross armv7 | `cross_armv7` | Bootlin armv7-eabihf | PlutoSDR / FISH Ball |
 | Cross aarch64 | `cross_aarch64` | Bootlin aarch64 | Raspberry Pi 4/5 |
 
@@ -97,7 +97,11 @@ macOS ld64 rescans by default. Linux needs `LINK_GROUP:RESCAN` for `gnuradio-blo
 - No `-ldl` → `CMAKE_DL_LIBS=""` or cmake adds it anyway → create empty `libdl.a` stub via `llvm-ar rcs`
 - `cpp-httplib` not always available → httplib-stub in CMakeLists.txt provides dummy target
 - `thread_affinity.hpp`: `native_handle()` returns `void*` not `pthread_t` → guarded with `!defined(__MINGW32__)`
-- Block registry disabled by default (COFF linking)
+- Block registry disabled by default (plugin loader uses dlopen, not available on Windows/MinGW). `full` profile unsupported.
+- `gr::tag::CONTEXT` renamed to `gr::tag::CONTEXT_KEY` to avoid collision with `winnt.h`'s `CONTEXT` typedef
+- `qa_thread_affinity`: POSIX `SCHED_*` tests guarded with `not defined(_WIN32)`
+- `BlockRegistry.hpp`: dllexport redeclaration warning suppressed with `-Wdll-attribute-on-redeclaration` pragma (MinGW+Clang only)
+- Known test failures (Windows only): `qa_Tags` (CONTEXT reference in test), `qa_thread_affinity` (POSIX SCHED_*)
 - ~45 min build (134 TUs via QEMU)
 
 ### GIT_REV

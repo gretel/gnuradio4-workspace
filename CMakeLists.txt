@@ -35,6 +35,13 @@ if(NOT BUILD_CONFIG)
 endif()
 include(kconfig)
 
+# ---- Windows: block plugins use dlopen — not yet ported to LoadLibrary ----
+if(WIN32 AND CONFIG_ENABLE_BLOCK_PLUGINS)
+    message(FATAL_ERROR "BUILD_CONFIG=full / CONFIG_ENABLE_BLOCK_PLUGINS is not supported on Windows yet. "
+        "PluginLoader uses dlopen which is not available on Windows/MinGW. "
+        "Use BUILD_CONFIG=sdk or ci, or override CONFIG_ENABLE_BLOCK_PLUGINS=n.")
+endif()
+
 # ---- Git revision (updated at build time) ----
 execute_process(
     COMMAND git rev-parse --short HEAD
@@ -286,3 +293,13 @@ if(_update_cmds)
     unset(_update_cmds)
 endif()
 unset(_GR4_EP_NAMES)
+
+# ---- Workspace smoke test (delegated to workspace/ subtree) ----
+# Runs only for native builds; cross-compiled binaries can't execute on the host.
+if(NOT CONFIG_BUILD_MODE_CROSS AND CONFIG_ENABLE_GR4_CORE)
+    include(CTest)
+    add_test(NAME workspace-smoke
+        COMMAND ${CMAKE_CTEST_COMMAND}
+            --test-dir "${CMAKE_BINARY_DIR}/workspace"
+            --output-on-failure)
+endif()

@@ -3,7 +3,7 @@
 Superbuild for the GNU Radio 4.0 split-repo ecosystem.
 
 ```
-gnuradio4-core ──→ gnuradio4-algorithm ──→ gnuradio4-blocks ──→ workspace/
+gnuradio4-core ──→ gnuradio4-library ──→ gnuradio4-blocks ──→ workspace/
 ```
 
 Builds three repos in dependency order via `ExternalProject_Add`, each installing to a shared prefix. The `workspace/` directory is where you build your own flowgraph apps against the installed SDK.
@@ -26,8 +26,9 @@ cmake --build build/dev
 
 > **Windows notes**
 > - Install prerequisites with `winget` (see below).
-> - Block registry and plugins are disabled by default (COFF linking model works differently — see `CONFIG_ENABLE_BLOCK_REGISTRY` / `CONFIG_ENABLE_BLOCK_PLUGINS` in the Windows preset).
-> - `cmake --workflow` is not yet wired for Windows (no test preset).
+> - Block registry and plugins are disabled by default (the plugin loader uses `dlopen`, which is not available on Windows/MinGW — see `CONFIG_ENABLE_BLOCK_REGISTRY` / `CONFIG_ENABLE_BLOCK_PLUGINS` in the Windows preset).
+> - The `full` build profile is not supported on Windows (it enables block plugins).
+> - Known test issues on Windows: `qa_Tags` (`CONTEXT` identifier collision with `winnt.h`), `qa_thread_affinity` (POSIX `SCHED_*` constants not available). These are guarded at compile time.
 
 ## Quick reference
 
@@ -38,7 +39,7 @@ cmake --build build/dev
 | `cmake --build build/dev --target menuconfig` | interactive Kconfig TUI (requires Ninja, run after first build) |
 | `cmake -B build/dev` | reconfigure after menuconfig changes |
 | `cmake --build build/dev --target clean` | clean build artifacts (keeps CMake cache) |
-| `cmake --workflow --preset macos` | configure + build + test, one shot (macOS / Linux only) |
+| `cmake --workflow --preset <platform>` | configure + build + test, one shot (native presets: `macos`, `linux`, `windows`) |
 | `cmake --build build/dev --target update-deps` | git pull --ff-only in each fetched ExternalProject repo |
 | `ctest --test-dir build/dev/workspace --output-on-failure` | workspace smoke tests |
 | `cmake --install build/dev --prefix <path>` | copy SDK to a stable path (e.g. `/opt/gnuradio4`) for shared reuse |
@@ -68,7 +69,7 @@ Three profiles in `configs/` control what gets built:
 | `ci`   | `ci_defconfig`   | + tests + Werror + audio |
 | `full` | `full_defconfig` | Full SDK: control-plane, audio, tests, examples |
 
-The SDK profile is the default. `CONFIG_ENABLE_GR4_CORE=y` auto-selects algorithm + blocks via Kconfig dependency chains.
+The SDK profile is the default. `CONFIG_ENABLE_GR4_CORE=y` auto-selects library + blocks via Kconfig dependency chains.
 
 ## Build hierarchy
 
@@ -108,7 +109,7 @@ By default all ExternalProject repos track `main`. For reproducible CI runs, pin
 cmake --preset macos -DBUILD_CONFIG=ci -DGR4_GIT_TAG=abc1234
 ```
 
-This applies the same ref to all three repos (core, algorithm, blocks). Reconfigure with a clean build dir to force re-fetch.
+This applies the same ref to all three repos (core, library, blocks). Reconfigure with a clean build dir to force re-fetch.
 
 ## Updating ExternalProject dependencies
 
@@ -131,10 +132,10 @@ Delete the cached source + build artifacts entirely and start from scratch:
 
 ```sh
 rm -rf build/dev/_deps/gnuradio4-core*
-rm -rf build/dev/_deps/gnuradio4-algorithm*
+rm -rf build/dev/_deps/gnuradio4-library*
 rm -rf build/dev/_deps/gnuradio4-blocks*
 rm -rf build/dev/gnuradio4-core
-rm -rf build/dev/gnuradio4-algorithm
+rm -rf build/dev/gnuradio4-library
 rm -rf build/dev/gnuradio4-blocks
 
 cmake --preset macos -DBUILD_CONFIG=sdk   # reconfigure, re-fetches
@@ -188,7 +189,7 @@ winget install -e --id bloodrock.pkg-config-lite
 | Repo | Contents |
 |------|----------|
 | [gnuradio4-core](https://github.com/gnuradio/gnuradio4-core) | Runtime, scheduler, blocklib, meta, options, plugin infra |
-| [gnuradio4-algorithm](https://github.com/gnuradio/gnuradio4-algorithm) | DSP / algorithm library |
+| [gnuradio4-library](https://github.com/gnuradio/gnuradio4-library) | DSP / algorithm library |
 | [gnuradio4-blocks](https://github.com/gnuradio/gnuradio4-blocks) | Standard MIT-licensed block implementations (audio, SDR, etc.) |
 
 Place a local checkout at repo root (e.g. `gnuradio4-core/CMakeLists.txt`) to override GitHub fetch — the superbuild uses it as `SOURCE_DIR` automatically.
