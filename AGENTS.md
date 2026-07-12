@@ -15,8 +15,6 @@ ctest --test-dir build/dev/workspace --output-on-failure
 | macOS | `macos` | Homebrew LLVM (brew bundle) | `xcrun` needs Xcode CLT |
 | Linux | `linux` | system gcc-14+ / clang-20+ | C++23 required |
 | Windows | `windows` | LLVM MinGW clang++ | Block registry OFF by default; `full` profile unsupported |
-| Cross armv7 | `cross_armv7` | Bootlin armv7-eabihf | PlutoSDR / FISH Ball |
-| Cross aarch64 | `cross_aarch64` | Bootlin aarch64 | Raspberry Pi 4/5 |
 
 ## Profiles
 
@@ -65,7 +63,7 @@ Symbols in `Kconfig`. Build profiles pin `configs/*_defconfig`.
 | `Kconfig` | All config symbols, deps, prompts |
 | `configs/*_defconfig` | Build profile pinning |
 | `cmake/repos/*.cmake` | Per-repo ExternalProject config |
-| `cmake/toolchain-*.cmake` | Platform toolchain files |
+| `cmake/toolchain-macos-homebrew-llvm.cmake` | macOS Homebrew LLVM toolchain |
 | `CMakePresets.json` | Preset definitions |
 | `workspace/CMakeLists.txt` | Downstream smoke test |
 | `Brewfile` | macOS system deps |
