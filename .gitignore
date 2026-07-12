@@ -68,9 +68,15 @@ virtualenv/
 *.egg-info/
 dist/
 
+# ---- AI coding assistants ----
+.opencode/
+.claude/
+.dirge/
+.pi/
+.plans/
+
 # ---- Tooling ----
 *.dSYM/
-.pi/tasks/
 imgui.ini
 
 # ---- Temp / stale ----
@@ -83,6 +89,7 @@ buildcfg.log
 # ---- Local checkouts for ExternalProject override ----
 gnuradio4-core/
 gnuradio4-algorithm/
+gnuradio4-library/
 gnuradio4-blocks/
 gr4-incubator/
 gr4-control-plane/
