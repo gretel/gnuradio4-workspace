@@ -295,8 +295,7 @@ endif()
 unset(_GR4_EP_NAMES)
 
 # ---- Workspace smoke test (delegated to workspace/ subtree) ----
-# Runs only for native builds; cross-compiled binaries can't execute on the host.
-if(NOT CONFIG_BUILD_MODE_CROSS AND CONFIG_ENABLE_GR4_CORE)
+if(CONFIG_ENABLE_GR4_CORE)
     include(CTest)
     add_test(NAME workspace-smoke
         COMMAND ${CMAKE_CTEST_COMMAND}

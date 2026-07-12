@@ -1,7 +1,6 @@
 BasedOnStyle: LLVM
 AllowShortCaseLabelsOnASingleLine: true
 # 2000 is a workaround to keep "unlimited" column length, since 0 doesn't always work as expected.
-# For the rationale behind the "unlimited" column length policy, please refer to CORE_DEVELOPMENT_GUIDELINE.md
 ColumnLimit: 2000
 AlignAfterOpenBracket: DontAlign
 BreakBeforeBraces: Attach

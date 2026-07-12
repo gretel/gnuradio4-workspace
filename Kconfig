@@ -1,12 +1,6 @@
 # SPDX-License-Identifier: MIT
 mainmenu "GNU Radio 4 Configuration"
 
-# Invisible — set by --preset cross_armv7 / cross_aarch64 (via cacheVariables).
-# When ON, defaults below switch to cross-friendly values (no audio, TBB, tests).
-config BUILD_MODE_CROSS
-    bool
-    default n
-
 menu "Core SDK"
 config ENABLE_GR4_CORE
     bool "gnuradio4-core (runtime, scheduler, blocklib, meta)"
@@ -101,8 +95,7 @@ menu "Features"
 
 config ENABLE_HTTP
     bool "HTTP / REST API core support"
-    default y if !BUILD_MODE_CROSS
-    default n if BUILD_MODE_CROSS
+    default y
     help
         Adds cpp-httplib dependency. Enables HTTP blocks and REST API support
         in the core runtime. Required by control-plane and incubator (they
@@ -110,8 +103,7 @@ config ENABLE_HTTP
 
 config ENABLE_BLOCK_REGISTRY
     bool "Block registry (runtime introspection)"
-    default y if !BUILD_MODE_CROSS
-    default n if BUILD_MODE_CROSS
+    default y
     help
         Enables a runtime registry of blocks. Turning this off gives fully
         static builds. Generates JSON block metadata at build time.
@@ -127,12 +119,10 @@ config ENABLE_BLOCK_PLUGINS
 
 config ENABLE_TBB
     bool "Intel TBB parallelism"
-    depends on !BUILD_MODE_CROSS
     default n
     help
         Enables the TBB dependency for std::execution::par parallel policies.
         Gives better performance on multi-core CPUs but adds a dependency.
-        Not available in cross-compilation builds.
 
 config ENABLE_PYTHON
     bool "Python bindings (pybind11 / NumPy)"
@@ -143,13 +133,10 @@ config ENABLE_PYTHON
 
 config ENABLE_AUDIO
     bool "Audio I/O blocks (libsoundio)"
-    depends on !BUILD_MODE_CROSS
-    default y if !BUILD_MODE_CROSS
-    default n if BUILD_MODE_CROSS
+    default y
     help
         Build the audio block family (AudioSource / AudioSink) via libsoundio.
         Requires libsoundio development package with cmake or pkg-config support.
-        Not available in cross-compilation builds.
         Passed as GR4_ENABLE_AUDIO to gnuradio4-blocks.
         NOTE (2026-07): upstream blocks/audio references gnuradio4::gr-libsoundio
         which gnuradio4-core no longer provides. Temporarily disabled in full
@@ -175,22 +162,18 @@ menu "Build"
 
 config ENABLE_TESTING
     bool "gnuradio4 test suite (qa_*, ~100 targets)"
-    default y if !BUILD_MODE_CROSS
-    default n if BUILD_MODE_CROSS
+    default y
     help
         Enable the GNU Radio 4 test suite (qa_* targets).
         Passed to gnuradio4-core, gnuradio4-algorithm, and gnuradio4-blocks.
-        Disabled by default in cross-compilation.
 
 
 
 config ENABLE_EXAMPLES
     bool "Build examples"
-    default y if !BUILD_MODE_CROSS
-    default n if BUILD_MODE_CROSS
+    default y
     help
         Build example programs from gnuradio4-core and gnuradio4-blocks.
-        Disabled by default in cross-compilation.
 
 config ENABLE_COVERAGE
     bool "Code coverage (-coverage)"

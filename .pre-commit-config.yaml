@@ -21,20 +21,6 @@ repos:
       - id: check-json
       - id: check-toml
 
-  # --- Shell scripts ---
-  - repo: https://github.com/shellcheck-py/shellcheck-py
-    rev: v0.11.0.1
-    hooks:
-      - id: shellcheck
-        args: ['--severity=warning']
-
-  # --- Dockerfiles ---
-  - repo: https://github.com/hadolint/hadolint
-    rev: v2.14.0
-    hooks:
-      - id: hadolint
-        args: ['--failure-threshold=warning']
-
   # --- Python ---
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.15.20

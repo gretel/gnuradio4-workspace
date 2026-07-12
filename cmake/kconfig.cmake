@@ -38,14 +38,8 @@ endif()
 set(COMMON_KCONFIG_ENV_SETTINGS
     PYTHON_EXECUTABLE=${PYTHON_EXECUTABLE}
     srctree=${PROJECT_ROOT}
-    KERNELVERSION=${KERNELVERSION}
     KCONFIG_CONFIG=${DOTCONFIG}
     KCONFIG_BASE=${PROJECT_ROOT}
-    # Set environment variables so that Kconfig can prune Kconfig source
-    # files for other architectures
-    ARCH=${ARCH}
-    ARCH_DIR=${ARCH_DIR}
-    SOC_DIR=${SOC_DIR}
     BUILD_CONFIG_DIR=${BUILD_CONFIG_DIR}
     CMAKE_BINARY_DIR=${CMAKE_BINARY_DIR}
 )
