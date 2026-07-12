@@ -19,6 +19,8 @@ install/
 Dockerfile.test
 *.md.tmp
 
+
+
 # ---- Conan ----
 /conan.cmake
 conan.lock
@@ -71,6 +73,7 @@ dist/
 # ---- Tooling ----
 *.dSYM/
 .pi/tasks/
+.plans/
 imgui.ini
 
 # ---- Temp / stale ----
