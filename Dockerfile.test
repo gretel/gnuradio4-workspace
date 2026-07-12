@@ -1,0 +1,12 @@
+FROM ubuntu:24.04
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    cmake ninja-build g++-14 make pkgconf git ca-certificates python3 libcpp-httplib-dev \
+    && rm -rf /var/lib/apt/lists/*
+COPY . /src
+WORKDIR /src
+ENV CXX=g++-14
+RUN rm -rf build/docker-sdk && \
+    cmake -B build/docker-sdk -G Ninja -DBUILD_CONFIG=sdk -DCMAKE_BUILD_TYPE=RelWithDebInfo 2>&1 && \
+    cmake --build build/docker-sdk -- -j$(nproc) 2>&1 && \
+    echo "=== SMOKE ===" && \
+    ./build/docker-sdk/src/gnuradio4
