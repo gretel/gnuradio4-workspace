@@ -36,6 +36,10 @@ if(CONFIG_ENABLE_GR4_CORE)
     # Windows/MinGW: httplib may not be installed; provide stub path
     if(WIN32 OR MINGW)
         list(APPEND _EP_CORE_ARGS "-DCMAKE_PREFIX_PATH=${CMAKE_BINARY_DIR}/httplib-stub")
+        # cmake 4.x on MinGW: CMAKE_CXX_FLAGS_INIT with -Wno-error=* flags causes
+        # "The warning category is not known" error because cmake parses -Wno-error
+        # flags as its own -W flags. Strip CXX_FLAGS_INIT to avoid this.
+        list(FILTER _EP_CORE_ARGS EXCLUDE REGEX "CMAKE_CXX_FLAGS_INIT")
     endif()
     set(_GR4_EP_GIT_TAG "interim/windows-test")
     set(_GR4_EP_GIT_REPO_BASE "gretel")

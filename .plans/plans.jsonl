@@ -1,1 +1,2 @@
-{"name":"windows-build-parity","title":"Complete Windows/MinGW build parity for gnuradio4","status":"in-progress","created_at":"2026-07-11T20:30:39.950Z"}
+{"name":"windows-build-parity","title":"Complete Windows/MinGW build parity for gnuradio4","status":"done","created_at":"2026-07-11T20:30:39.950Z"}
+{"name":"windows-parity-testing","title":"Test Windows parity fixes across all platforms","status":"done","created_at":"2026-07-12T10:15:57.699Z"}
