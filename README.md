@@ -66,8 +66,8 @@ Three profiles in `configs/` control what gets built:
 | Profile | File | What |
 |---------|------|------|
 | `sdk`  | `sdk_defconfig`  | Three repos, minimal, no tests |
-| `ci`   | `ci_defconfig`   | + tests + Werror + audio |
-| `full` | `full_defconfig` | Full SDK: control-plane, audio, tests, examples |
+| `ci`   | `ci_defconfig`   | + tests + Werror |
+| `full` | `full_defconfig` | Full SDK: control-plane, tests, examples |
 
 The SDK profile is the default. `CONFIG_ENABLE_GR4_CORE=y` auto-selects library + blocks via Kconfig dependency chains.
 
@@ -165,7 +165,11 @@ brew bundle
 
 # Linux
 sudo apt-get install -y cmake ninja-build ccache g++-14 make pkgconf
-# Optional: libsoundio-dev libcpp-httplib-dev soapysdr-dev
+
+# Optional dependencies (enabled by build profile):
+#   libsoundio-dev     – audio blocks (GR4_ENABLE_AUDIO)
+#   libcpp-httplib-dev – HTTP tests and control-plane (GR4_ENABLE_HTTP)
+#   soapysdr-dev       – SDR blocks (GR4_ENABLE_SDR)
 
 # Windows (ARM64 or x86_64)
 winget install -e --id Kitware.CMake

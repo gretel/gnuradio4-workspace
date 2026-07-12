@@ -132,29 +132,6 @@ if(WIN32 OR MINGW)
     unset(_LLVM_AR)
 endif()
 
-# Windows/MinGW: create httplib-stub for cpp-httplib (being removed from core)
-if(WIN32 OR MINGW)
-    set(_HTTPLIB_STUB_DIR "${CMAKE_BINARY_DIR}/httplib-stub/cmake")
-    file(MAKE_DIRECTORY "${_HTTPLIB_STUB_DIR}")
-    set(_HTTPLIB_STUB_FILE "${_HTTPLIB_STUB_DIR}/httplibConfig.cmake")
-    if(NOT EXISTS "${_HTTPLIB_STUB_FILE}")
-        file(WRITE "${_HTTPLIB_STUB_FILE}" [[
-# SPDX-License-Identifier: MIT
-# Minimal stub for cpp-httplib - provides httplib::httplib target.
-# cpp-httplib is being removed from gnuradio4-core upstream; this stub
-# allows the build to proceed without the actual library when HTTP
-# test blocks are disabled (CONFIG_ENABLE_HTTP=n).
-
-if(NOT TARGET httplib::httplib)
-    add_library(httplib::httplib INTERFACE IMPORTED)
-endif()
-]])
-        message(STATUS "Created httplib stub: ${_HTTPLIB_STUB_FILE}")
-    endif()
-    unset(_HTTPLIB_STUB_DIR)
-    unset(_HTTPLIB_STUB_FILE)
-endif()
-
 # ---- Git tag/ref for all GR4 ExternalProject repos ----
 # Override with -DGR4_GIT_TAG=<sha> in CI for reproducible builds.
 set(GR4_GIT_TAG "main" CACHE STRING "Git ref for all gnuradio4 ExternalProject repos")

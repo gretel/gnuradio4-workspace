@@ -94,12 +94,12 @@ menu "Features"
     depends on ENABLE_GR4_CORE
 
 config ENABLE_HTTP
-    bool "HTTP / REST API core support"
+    bool "HTTP / REST API support"
     default y
     help
-        Adds cpp-httplib dependency. Enables HTTP blocks and REST API support
-        in the core runtime. Required by control-plane and incubator (they
-        select this automatically).
+        Adds cpp-httplib dependency for HTTP integration tests, HTTP blocks,
+        and the control-plane server. Required by control-plane and incubator
+        (they select this automatically). Not needed for sdk/ci profiles.
 
 config ENABLE_BLOCK_REGISTRY
     bool "Block registry (runtime introspection)"
@@ -133,14 +133,13 @@ config ENABLE_PYTHON
 
 config ENABLE_AUDIO
     bool "Audio I/O blocks (libsoundio)"
-    default y
+    default n
     help
         Build the audio block family (AudioSource / AudioSink) via libsoundio.
         Requires libsoundio development package with cmake or pkg-config support.
         Passed as GR4_ENABLE_AUDIO to gnuradio4-blocks.
-        NOTE (2026-07): upstream blocks/audio references gnuradio4::gr-libsoundio
-        which gnuradio4-core no longer provides. Temporarily disabled in full
-        profile until the target is re-added or a proper find module is created.
+        If enabled and libsoundio is not found, configuration fails with a
+        clear error message.
 
 config ENABLE_SDR
     bool "SDR block family (SoapySDR)"

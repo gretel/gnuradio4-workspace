@@ -22,6 +22,7 @@ if(CONFIG_ENABLE_GR4_CORE)
         -DMIT_ONLY=${CONFIG_ENABLE_MIT_ONLY}
         -DENABLE_COVERAGE=${CONFIG_ENABLE_COVERAGE}
         -DTIMETRACE=${CONFIG_TIMETRACE}
+        -DGR4_ENABLE_HTTP_TESTS=${CONFIG_ENABLE_HTTP}
     )
     if(CONFIG_SANITIZER_ADDRESS)
         list(APPEND _EP_CORE_ARGS -DADDRESS_SANITIZER=ON)
@@ -33,9 +34,7 @@ if(CONFIG_ENABLE_GR4_CORE)
         list(APPEND _EP_CORE_ARGS -DTHREAD_SANITIZER=ON)
     endif()
 
-    # Windows/MinGW: httplib may not be installed; provide stub path
     if(WIN32 OR MINGW)
-        list(APPEND _EP_CORE_ARGS "-DCMAKE_PREFIX_PATH=${CMAKE_BINARY_DIR}/httplib-stub")
         # cmake 4.x on MinGW: CMAKE_CXX_FLAGS_INIT with -Wno-error=* flags causes
         # "The warning category is not known" error because cmake parses -Wno-error
         # flags as its own -W flags. Strip CXX_FLAGS_INIT to avoid this.

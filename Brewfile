@@ -3,5 +3,4 @@ brew "cmake"
 brew "ninja"
 brew "ccache"
 brew "pkgconf"
-brew "libsoundio"
-brew "cpp-httplib"
+# Optional (enabled by build profile): libsoundio (voice), cpp-httplib (http/control-plane)
