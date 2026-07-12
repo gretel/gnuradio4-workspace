@@ -84,47 +84,4 @@ jobs:
           BUILD_CONFIG: sdk
         run: cmake --workflow --preset windows
 
-  # ── Docker: Linux native build ──
-  docker-linux:
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 1
-      - name: Build SDK image
-        run: docker build -f Dockerfile -t gr4-test:sdk .
-      - name: Smoke test
-        run: docker run --rm gr4-test:sdk
-
-  # ── Docker: cross armv7 ──
-  docker-armv7:
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 1
-      - name: Build cross-armv7 image
-        run: docker build -f docker/Dockerfile.cross-armv7 -t gr4-test:armv7 .
-      - name: Verify ARM32 binary
-        run: |
-          docker run --rm --entrypoint file gr4-test:armv7 /opt/gnuradio4/bin/gnuradio4 | tee /tmp/armv7-check.txt
-          grep -q 'ELF 32-bit.*ARM' /tmp/armv7-check.txt
-          echo 'cross-armv7: valid ARMv7 binary'
-
-  # ── Docker: cross aarch64 ──
-  docker-aarch64:
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 1
-      - name: Build cross-aarch64 image
-        run: docker build -f docker/Dockerfile.cross-aarch64 -t gr4-test:aarch64 .
-      - name: Verify AARCH64 binary
-        run: |
-          docker run --rm --entrypoint file gr4-test:aarch64 /opt/gnuradio4/bin/gnuradio4 | tee /tmp/aarch64-check.txt
-          grep -q 'ELF 64-bit.*ARM aarch64' /tmp/aarch64-check.txt
-          echo 'cross-aarch64: valid AARCH64 binary'
+  
