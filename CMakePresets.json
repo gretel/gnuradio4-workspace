@@ -57,28 +57,6 @@
         "CONFIG_ENABLE_BLOCK_PLUGINS": "n",
         "CONFIG_WARNINGS_AS_ERRORS": "n"
       }
-    },
-    {
-      "name": "cross_armv7",
-      "displayName": "Cross armv7-eabihf (PlutoSDR / FISH Ball)",
-      "inherits": "base",
-      "binaryDir": "${sourceDir}/build/cross-armv7",
-      "toolchainFile": "${sourceDir}/cmake/toolchain-armv7-bootlin.cmake",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
-        "CONFIG_BUILD_MODE_CROSS": "y"
-      }
-    },
-    {
-      "name": "cross_aarch64",
-      "displayName": "Cross aarch64 (Raspberry Pi 4/5)",
-      "inherits": "base",
-      "binaryDir": "${sourceDir}/build/cross-aarch64",
-      "toolchainFile": "${sourceDir}/cmake/toolchain-aarch64-bootlin.cmake",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
-        "CONFIG_BUILD_MODE_CROSS": "y"
-      }
     }
   ],
   "buildPresets": [
@@ -97,16 +75,7 @@
       "configurePreset": "windows",
       "jobs": 0
     },
-    {
-      "name": "cross_armv7",
-      "configurePreset": "cross_armv7",
-      "jobs": 0
-    },
-    {
-      "name": "cross_aarch64",
-      "configurePreset": "cross_aarch64",
-      "jobs": 0
-    }
+
   ],
   "testPresets": [
     {
