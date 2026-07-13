@@ -54,9 +54,15 @@ cmake --preset windows -DBUILD_CONFIG=sdk
 cmake --build build/dev
 ```
 
-## Build profiles
+## Configuration
 
-Defconfig files in `configs/` control which features are enabled and what gets built (orthogonal to the platform preset — pair any profile with any preset):
+The superbuild uses **Kconfig** for all build options — symbols are defined in `Kconfig` at the project root and resolved at configure time.
+
+Two orthogonal axes control the build: **presets** pick the platform and toolchain (see [Presets](#presets)), while **build profiles** pick the feature set.
+
+### Build profiles
+
+Predefined defconfig files in `configs/` provide ready-to-use sets of Kconfig values. Pass one via `-DBUILD_CONFIG=<profile>` at configure time:
 
 | Profile | File | Testing | HTTP / control-plane | Use case |
 |---------|------|---------|---------------------|----------|
@@ -66,9 +72,24 @@ Defconfig files in `configs/` control which features are enabled and what gets b
 
 The SDK profile is the default (`-DBUILD_CONFIG=sdk`). `CONFIG_ENABLE_GR4_CORE=y` auto-selects library + blocks via Kconfig dependency chains.
 
+### Interactive tuning (menuconfig)
+
+After the first configure you can toggle individual Kconfig symbols interactively:
+
+```sh
+cmake --build build/dev --target menuconfig
+cmake -B build/dev   # regenerate build system from changed config
+```
+
+Changes are written to `build/dev/.config` and persist across rebuilds. To switch to a different profile, wipe the build directory and reconfigure from scratch.
+
+### Custom profile
+
+For full control, edit `build/dev/.config` directly and re-run `cmake -B build/dev`, or create your own defconfig file and pass it with `-DBUILD_CONFIG=custom`.
+
 ## Quick reference
 
-Two orthogonal axes control the build: **presets** pick the platform and toolchain (see [Presets](#presets)), while `-DBUILD_CONFIG=<profile>` picks the feature set (see [Build profiles](#build-profiles)).
+For a guided overview of presets and build profiles, see [Configuration](#configuration).
 
 | Command | What it does |
 |---------|-------------|
@@ -77,8 +98,8 @@ Two orthogonal axes control the build: **presets** pick the platform and toolcha
 | `cmake --build build/dev --target clean` | clean build artifacts (keeps CMake cache) |
 | `cmake --install build/dev --prefix <path>` | copy SDK to a stable path (e.g. `/opt/gnuradio4`) |
 | `cmake --workflow --preset <platform>` | configure + build + test, one shot |
-| `cmake -B build/dev` | reconfigure after defconfig edits or menuconfig |
-| `cmake --build build/dev --target menuconfig` | interactive Kconfig TUI — toggle individual symbols on/off, then `cmake -B build/dev` to apply |
+| `cmake -B build/dev` | reconfigure after profile or menuconfig changes |
+| `cmake --build build/dev --target menuconfig` | interactive Kconfig TUI (see [Configuration](#configuration)) |
 | `cmake --build build/dev --target update-deps` | git pull --ff-only in each fetched ExternalProject repo |
 | `ctest --test-dir build/dev/workspace --output-on-failure` | workspace smoke tests |
 
