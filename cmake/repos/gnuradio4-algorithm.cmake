@@ -12,7 +12,8 @@ if(CONFIG_ENABLE_GR4_ALGORITHM)
         -DGR4_ENABLE_HTTP_TESTS=${CONFIG_ENABLE_HTTP}
     )
 
-    set(_GR4_EP_GIT_TAG "main")
+    set(GR4_LIBRARY_GIT_TAG "main" CACHE STRING "Git ref for gnuradio4-library")
+    set(_GR4_EP_GIT_TAG "${GR4_LIBRARY_GIT_TAG}")
     set(_GR4_EP_GIT_REPO_BASE "gretel")
     gr4_ep(gnuradio4-algorithm
         GIT_REPO gnuradio4-library
