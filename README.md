@@ -34,7 +34,7 @@ cmake --build build/dev
 
 | Command | What it does |
 |---------|-------------|
-| `cmake --preset <platform> -DBUILD_CONFIG=<profile>` | configure (platform: `macos`/`linux`/`windows`/`cross_armv7`/`cross_aarch64`) |
+| `cmake --preset <platform> -DBUILD_CONFIG=<profile>` | configure (platform: `macos`/`linux`/`windows`) |
 | `cmake --build build/dev` | build all repos for the dev target |
 | `cmake --build build/dev --target menuconfig` | interactive Kconfig TUI (requires Ninja, run after first build) |
 | `cmake -B build/dev` | reconfigure after menuconfig changes |
@@ -73,19 +73,15 @@ The SDK profile is the default. `CONFIG_ENABLE_GR4_CORE=y` auto-selects library 
 
 ## Build hierarchy
 
-Platform builds live in separate build directories:
+All native platform builds share a single build directory:
 
-| Target | Build dir | Use case |
-|--------|-----------|----------|
-| Native dev | `build/dev` | macOS, Linux, Windows |
-| Cross armv7 | `build/cross-armv7` | PlutoSDR / FISH Ball (Cortex-A9) |
-| Cross aarch64 | `build/cross-aarch64` | Raspberry Pi 4/5 (Cortex-A72/A76) |
-
-Each cross target uses a Bootlin toolchain and builds in Release mode.
+| Target | Build dir |
+|--------|-----------|
+| native dev | `build/dev` |
 
 ## Cleaning
 
-Three options, depending on how thorough you need to be:
+Two options, depending on how thorough you need to be:
 
 ```sh
 # 1. Clean build artifacts, keep CMake cache (fastest, good for rebuilds)
@@ -93,10 +89,6 @@ cmake --build build/dev --target clean
 
 # 2. Wipe the build directory entirely (full reconfigure on next build)
 rm -rf build/dev
-
-# 3. Wipe a cross-compilation build directory
-rm -rf build/cross-armv7
-rm -rf build/cross-aarch64
 ```
 
 After a full wipe (`rm -rf build/dev`), the next `cmake --preset …` will re-fetch all external sources and start from scratch. This is also the correct way to switch between `BUILD_CONFIG` profiles — reconfigure from a clean directory.
@@ -185,8 +177,6 @@ winget install -e --id bloodrock.pkg-config-lite
 | macOS | `macos` | `build/dev` | Homebrew LLVM |
 | Linux | `linux` | `build/dev` | gcc-14+ / clang-20+ |
 | Windows | `windows` | `build/dev` | LLVM MinGW clang++ |
-| Cross armv7 | `cross_armv7` | `build/cross-armv7` | Bootlin armv7-eabihf |
-| Cross aarch64 | `cross_aarch64` | `build/cross-aarch64` | Bootlin aarch64 |
 
 ## Split repos
 
