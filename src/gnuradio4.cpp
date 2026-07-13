@@ -57,8 +57,6 @@ constexpr const char* arch_name() {
 #endif
 }
 
-void print_component(const char* name, bool present) { std::cout << "  " << name << "  " << (present ? "✓" : "—") << '\n'; }
-
 } // namespace
 
 int main() {
@@ -66,26 +64,10 @@ int main() {
     SetConsoleOutputCP(CP_UTF8);
 #endif
 
-    // Header
     std::cout << '\n';
     std::cout << "  ▄▖▖ ▖▖▖▄▖   ▌▘  ▖▖ " << WORKSPACE_VERSION << "-" << GIT_REV << '\n';
     std::cout << "  ▌ ▛▖▌▌▌▙▘▀▌▛▌▌▛▌▙▌ " << platform_name() << " / " << arch_name() << "  " << build_type_str() << '\n';
     std::cout << "  ▙▌▌▝▌▙▌▌▌█▌▙▌▌▙▌ ▌ " << compiler_id << '\n';
-    std::cout << '\n';
-
-    // Components
-    std::cout << "  components\n";
-    print_component("core", true);
-#ifdef HAVE_GNURADIO4_ALGORITHM
-    print_component("algorithm", true);
-#else
-    print_component("algorithm", false);
-#endif
-#ifdef HAVE_GNURADIO4_BLOCKS
-    print_component("blocks", true);
-#else
-    print_component("blocks", false);
-#endif
     std::cout << '\n';
 
     return 0;
