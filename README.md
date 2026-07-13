@@ -72,7 +72,7 @@ Predefined defconfig files in `configs/` provide ready-to-use sets of Kconfig va
 
 The SDK profile is the default (`-DBUILD_CONFIG=sdk`). `CONFIG_ENABLE_GR4_CORE=y` auto-selects library + blocks via Kconfig dependency chains.
 
-### Interactive tuning (menuconfig)
+### Menuconfig
 
 After the first configure you can toggle individual Kconfig symbols interactively:
 
