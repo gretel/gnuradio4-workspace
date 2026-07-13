@@ -3,9 +3,9 @@
 ```mermaid
 flowchart TD
     SB[gnuradio4-workspace superbuild]
-    CORE[gretel/gnuradio4-core<br/>interim/windows-test]
+    CORE[gretel/gnuradio4-core<br/>main]
     LIB[gretel/gnuradio4-library<br/>main]
-    BLOCKS[gretel/gnuradio4-blocks<br/>interim/windows-test]
+    BLOCKS[gretel/gnuradio4-blocks<br/>main]
     INC[gnuradio/gr4-incubator<br/>main]
     CP[gnuradio/gnuradio4-control-plane<br/>main]
     WS[workspace smoke test]

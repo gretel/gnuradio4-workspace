@@ -40,7 +40,7 @@ if(CONFIG_ENABLE_GR4_CORE)
         # flags as its own -W flags. Strip CXX_FLAGS_INIT to avoid this.
         list(FILTER _EP_CORE_ARGS EXCLUDE REGEX "CMAKE_CXX_FLAGS_INIT")
     endif()
-    set(GR4_CORE_GIT_TAG "interim/windows-test" CACHE STRING "Git ref for gnuradio4-core")
+    set(GR4_CORE_GIT_TAG "main" CACHE STRING "Git ref for gnuradio4-core")
     set(_GR4_EP_GIT_TAG "${GR4_CORE_GIT_TAG}")
     set(_GR4_EP_GIT_REPO_BASE "gretel")
     gr4_ep(gnuradio4-core

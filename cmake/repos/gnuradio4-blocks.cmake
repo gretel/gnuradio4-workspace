@@ -15,7 +15,7 @@ if(CONFIG_ENABLE_GR4_BLOCKS)
         -DGR4_ENABLE_HTTP_TESTS=${CONFIG_ENABLE_HTTP}
     )
 
-    set(GR4_BLOCKS_GIT_TAG "interim/windows-test" CACHE STRING "Git ref for gnuradio4-blocks")
+    set(GR4_BLOCKS_GIT_TAG "main" CACHE STRING "Git ref for gnuradio4-blocks")
     set(_GR4_EP_GIT_TAG "${GR4_BLOCKS_GIT_TAG}")
     set(_GR4_EP_GIT_REPO_BASE "gretel")
     gr4_ep(gnuradio4-blocks
