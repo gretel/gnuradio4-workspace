@@ -196,12 +196,6 @@ This repository incorporates vendored code from the following projects:
 | [cmake-kconfig](https://github.com/jameswalmsley/cmake-kconfig) (adapted from Zephyr RTOS) | `cmake/kconfig.cmake`, `cmake/extensions.cmake`, `cmake/python.cmake`, `scripts/kconfig/kconfig.py`, `scripts/kconfig/menuconfig.py` | Apache-2.0 |
 | [Kconfiglib](https://github.com/ulfalizer/Kconfiglib) | `scripts/kconfig/kconfiglib.py` | ISC |
 
-Sub-projects (`gnuradio4-core`, `gnuradio4-library`, `gnuradio4-blocks`, `gr4-incubator`, `gr4-control-plane`) are fetched at build time under their own licenses.
-
-Build toolchain (Brewfile): ccache, cmake, llvm, ninja, pkgconf — via Homebrew.
-
-cmake-format and cmake-lint configuration in `.cmake-format.yaml`.
-
 ## License
 
 MIT — workspace scaffolding. Sub-projects retain their own licenses.
