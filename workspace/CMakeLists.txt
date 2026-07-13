@@ -37,8 +37,34 @@ if(gnuradio4Blocks_FOUND)
     message(STATUS "workspace: gnuradio4Blocks found")
 endif()
 
-# ---- Smoke test ----
+# ---- Diagnostic binary — verify the SDK is installed and linkable ----
+add_executable(gnuradio4 "../src/gnuradio4.cpp")
+set_target_properties(gnuradio4 PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/../src")
+target_compile_definitions(gnuradio4 PRIVATE
+    GIT_REV="${GIT_REV}"
+    WORKSPACE_VERSION="${WORKSPACE_VERSION}")
+
+target_link_libraries(gnuradio4 PRIVATE
+    gnuradio-core
+    gnuradio-options)
+
+if(TARGET gnuradio-algorithm)
+    target_link_libraries(gnuradio4 PRIVATE gnuradio-algorithm)
+    target_compile_definitions(gnuradio4 PRIVATE HAVE_GNURADIO4_ALGORITHM)
+endif()
+
+if(TARGET gnuradio4::gr-basic)
+    target_link_libraries(gnuradio4 PRIVATE gnuradio4::gr-basic)
+    target_compile_definitions(gnuradio4 PRIVATE HAVE_GNURADIO4_BLOCKS)
+endif()
+
+# ---- Smoke tests ----
 enable_testing()
+
+add_test(NAME gnuradio4-smoke
+    COMMAND gnuradio4
+    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/../src")
 
 add_executable(gr4-smoke src/smoke.cpp)
 target_link_libraries(gr4-smoke PRIVATE gnuradio-core gnuradio-options)
