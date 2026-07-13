@@ -5,15 +5,15 @@
 # --------------------------------------------------------------------------
 
 if(CONFIG_ENABLE_GR4_CONTROL_PLANE)
-    set(_EP_CPLANE_ARGS ${_EP_COMMON_ARGS})
-    list(APPEND _EP_CPLANE_ARGS
+    set(_ep_cplane_args ${_ep_common_args})
+    list(APPEND _ep_cplane_args
         -DENABLE_TESTING=${CONFIG_ENABLE_TESTING}
         -DGR_USE_FETCHCONTENT_DEPS=${CONFIG_USE_FETCHCONTENT}
     )
 
     gr4_ep(gr4-control-plane
         GIT_REPO gnuradio4-control-plane
-        CMAKE_ARGS ${_EP_CPLANE_ARGS}
+        CMAKE_ARGS ${_ep_cplane_args}
         DEPENDS gnuradio4-core
     )
 endif()

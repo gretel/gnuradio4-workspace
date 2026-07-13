@@ -10,8 +10,8 @@
 #   CONFIG_TIMETRACE, CONFIG_BUILD_JOBS, CONFIG_SANITIZER_ADDRESS|UB|THREAD
 
 if(CONFIG_ENABLE_GR4_CORE)
-    set(_EP_CORE_ARGS ${_EP_COMMON_ARGS})
-    list(APPEND _EP_CORE_ARGS
+    set(_ep_core_args ${_ep_common_args})
+    list(APPEND _ep_core_args
         -DENABLE_TESTING=${CONFIG_ENABLE_TESTING}
         -DENABLE_EXAMPLES=${CONFIG_ENABLE_EXAMPLES}
         -DWARNINGS_AS_ERRORS=${CONFIG_WARNINGS_AS_ERRORS}
@@ -25,28 +25,28 @@ if(CONFIG_ENABLE_GR4_CORE)
         -DGR4_ENABLE_HTTP_TESTS=${CONFIG_ENABLE_HTTP}
     )
     if(CONFIG_SANITIZER_ADDRESS)
-        list(APPEND _EP_CORE_ARGS -DADDRESS_SANITIZER=ON)
+        list(APPEND _ep_core_args -DADDRESS_SANITIZER=ON)
     endif()
     if(CONFIG_SANITIZER_UB)
-        list(APPEND _EP_CORE_ARGS -DUB_SANITIZER=ON)
+        list(APPEND _ep_core_args -DUB_SANITIZER=ON)
     endif()
     if(CONFIG_SANITIZER_THREAD)
-        list(APPEND _EP_CORE_ARGS -DTHREAD_SANITIZER=ON)
+        list(APPEND _ep_core_args -DTHREAD_SANITIZER=ON)
     endif()
 
     if(WIN32 OR MINGW)
         # cmake 4.x on MinGW: CMAKE_CXX_FLAGS_INIT with -Wno-error=* flags causes
         # "The warning category is not known" error because cmake parses -Wno-error
         # flags as its own -W flags. Strip CXX_FLAGS_INIT to avoid this.
-        list(FILTER _EP_CORE_ARGS EXCLUDE REGEX "CMAKE_CXX_FLAGS_INIT")
+        list(FILTER _ep_core_args EXCLUDE REGEX "CMAKE_CXX_FLAGS_INIT")
     endif()
     set(GR4_CORE_GIT_TAG "main" CACHE STRING "Git ref for gnuradio4-core")
-    set(_GR4_EP_GIT_TAG "${GR4_CORE_GIT_TAG}")
-    set(_GR4_EP_GIT_REPO_BASE "gretel")
+    set(_gr4_ep_git_tag "${GR4_CORE_GIT_TAG}")
+    set(_gr4_ep_git_repo_base "gretel")
     gr4_ep(gnuradio4-core
-        CMAKE_ARGS ${_EP_CORE_ARGS}
+        CMAKE_ARGS ${_ep_core_args}
     )
     # Reset to defaults so subsequent repos don't inherit
-    set(_GR4_EP_GIT_TAG "${GR4_GIT_TAG}")
-    set(_GR4_EP_GIT_REPO_BASE "gnuradio")
+    set(_gr4_ep_git_tag "${GR4_GIT_TAG}")
+    set(_gr4_ep_git_repo_base "gnuradio")
 endif()

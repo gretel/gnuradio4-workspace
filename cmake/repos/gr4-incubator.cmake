@@ -5,8 +5,8 @@
 # --------------------------------------------------------------------------
 
 if(CONFIG_ENABLE_GR4_INCUBATOR)
-    set(_EP_INCUBATOR_ARGS ${_EP_COMMON_ARGS})
-    list(APPEND _EP_INCUBATOR_ARGS
+    set(_ep_incubator_args ${_ep_common_args})
+    list(APPEND _ep_incubator_args
         -DENABLE_TESTING=${CONFIG_ENABLE_TESTING}
         -DENABLE_EXAMPLES=${CONFIG_ENABLE_EXAMPLES}
         -DWARNINGS_AS_ERRORS=${CONFIG_WARNINGS_AS_ERRORS}
@@ -14,7 +14,7 @@ if(CONFIG_ENABLE_GR4_INCUBATOR)
     )
 
     gr4_ep(gr4-incubator
-        CMAKE_ARGS ${_EP_INCUBATOR_ARGS}
+        CMAKE_ARGS ${_ep_incubator_args}
         DEPENDS gnuradio4-core
     )
 endif()

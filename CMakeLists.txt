@@ -73,7 +73,7 @@ endif()
 # as a transitive link dependency. Pass down as cache var to all
 # ExternalProject sub-builds.
 if(WIN32 OR MINGW)
-    set(CMAKE_DL_LIBS "" CACHE INTERNAL "No libdl on Windows/MinGW")
+    set(CMAKE_DL_LIBS "")
 endif()
 
 # ---- Shared install prefix for all sub-projects ----
@@ -81,8 +81,8 @@ endif()
 # for a stable SDK install path (e.g. /opt/gnuradio4).
 set(GR4_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/_install"
     CACHE STRING "Install prefix for gnuradio4 SDK sub-projects (set to /opt/gnuradio4 for stable SDK)")
-set(_INSTALL_PREFIX "${GR4_INSTALL_PREFIX}")
-file(MAKE_DIRECTORY "${_INSTALL_PREFIX}")
+set(_install_prefix "${GR4_INSTALL_PREFIX}")
+file(MAKE_DIRECTORY "${_install_prefix}")
 
 # ---- Build ExternalProject CMAKE_ARGS lists ----
 # IMPORTANT: generator expressions ($<BOOL:...>) DO NOT work in CMAKE_ARGS.
@@ -90,9 +90,9 @@ file(MAKE_DIRECTORY "${_INSTALL_PREFIX}")
 # Use plain if() + list(APPEND) instead.
 
 # Common args passed to every sub-project
-set(_EP_COMMON_ARGS
+set(_ep_common_args
     -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
-    -DCMAKE_PREFIX_PATH=${_INSTALL_PREFIX}
+    -DCMAKE_PREFIX_PATH=${_install_prefix}
     -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
     -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
     -DCMAKE_CXX_STANDARD=23
@@ -104,40 +104,40 @@ set(_EP_COMMON_ARGS
     -DCMAKE_CXX_FLAGS_INIT=-Wno-psabi
 )
 if(CMAKE_TOOLCHAIN_FILE)
-    list(APPEND _EP_COMMON_ARGS -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
+    list(APPEND _ep_common_args -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
     # C compiler needed for cross-compilation; on native builds sub-projects auto-detect
-    list(APPEND _EP_COMMON_ARGS -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER})
+    list(APPEND _ep_common_args -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER})
 endif()
 # Windows/MinGW: no libdl, suppress cascading -ldl link failures
 if(WIN32 OR MINGW)
-    list(APPEND _EP_COMMON_ARGS -DCMAKE_DL_LIBS="")
-    list(APPEND _EP_COMMON_ARGS -DCMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM})
+    list(APPEND _ep_common_args -DCMAKE_DL_LIBS="")
+    list(APPEND _ep_common_args -DCMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM})
 endif()
 
 # MinGW: create empty libdl.a stub if llvm-ar is available.
 # MinGW platform defaults add -ldl to every link target; setting
 # CMAKE_DL_LIBS="" is not always sufficient for shared library targets.
 if(WIN32 OR MINGW)
-    find_program(_LLVM_AR llvm-ar)
-    if(_LLVM_AR)
-        get_filename_component(_MINGW_LIB "${CMAKE_CXX_COMPILER}" DIRECTORY)
-        get_filename_component(_MINGW_LIB "${_MINGW_LIB}" DIRECTORY)
-        set(_DL_STUB "${_MINGW_LIB}/libdl.a")
-        if(NOT EXISTS "${_DL_STUB}")
-            execute_process(COMMAND ${_LLVM_AR} rcs "${_DL_STUB}")
-            message(STATUS "Created MinGW libdl.a stub: ${_DL_STUB}")
+    find_program(_llvm_ar llvm-ar)
+    if(_llvm_ar)
+        get_filename_component(_mingw_lib "${CMAKE_CXX_COMPILER}" DIRECTORY)
+        get_filename_component(_mingw_lib "${_mingw_lib}" DIRECTORY)
+        set(_dl_stub "${_mingw_lib}/libdl.a")
+        if(NOT EXISTS "${_dl_stub}")
+            execute_process(COMMAND ${_llvm_ar} rcs "${_dl_stub}")
+            message(STATUS "Created MinGW libdl.a stub: ${_dl_stub}")
         endif()
-        unset(_DL_STUB)
+        unset(_dl_stub)
     endif()
-    unset(_LLVM_AR)
+    unset(_llvm_ar)
 endif()
 
 # ---- Git tag/ref for all GR4 ExternalProject repos ----
 # Override with -DGR4_GIT_TAG=<sha> in CI for reproducible builds.
 set(GR4_GIT_TAG "main" CACHE STRING "Git ref for all gnuradio4 ExternalProject repos")
 # Per-repo overrides (set in cmake/repos/*.cmake before calling gr4_ep)
-set(_GR4_EP_GIT_TAG "${GR4_GIT_TAG}")
-set(_GR4_EP_GIT_REPO_BASE "gnuradio")
+set(_gr4_ep_git_tag "${GR4_GIT_TAG}")
+set(_gr4_ep_git_repo_base "gnuradio")
 
 # Controls whether ExternalProject update step runs on reconfigure.
 # ON (default): no auto-update — use `update-deps` target explicitly.
@@ -146,28 +146,29 @@ option(EP_UPDATE_DISCONNECTED "Skip ExternalProject auto-update on reconfigure" 
 mark_as_advanced(EP_UPDATE_DISCONNECTED)
 
 # Collects ExternalProject names for the update-deps target.
-set(_GR4_EP_NAMES)
+set(_gr4_ep_names)
 
 # ---- ExternalProject helper macro ----
 # Uses local checkout dir if present, otherwise fetches from GitHub.
 include(ExternalProject)
+# doc: Thin wrapper around ExternalProject_Add for gnuradio4 sub-repos.
 macro(gr4_ep name)
-    cmake_parse_arguments(_GR4 "" "GIT_REPO" "" ${ARGN})
-    if(_GR4_GIT_REPO)
-        set(_repo_name "${_GR4_GIT_REPO}")
-        set(_src "${CMAKE_SOURCE_DIR}/${_GR4_GIT_REPO}")
+    cmake_parse_arguments(_gr4 "" "GIT_REPO" "" ${ARGN})
+    if(_gr4_GIT_REPO)
+        set(_repo_name "${_gr4_GIT_REPO}")
+        set(_src "${CMAKE_SOURCE_DIR}/${_gr4_GIT_REPO}")
     else()
         set(_repo_name "${name}")
         set(_src "${CMAKE_SOURCE_DIR}/${name}")
     endif()
-    list(APPEND _GR4_EP_NAMES "${name}")
+    list(APPEND _gr4_ep_names "${name}")
     if(EXISTS "${_src}/CMakeLists.txt")
         message(STATUS "${name}: using local ${_src}/")
         set(_dl_args SOURCE_DIR "${_src}")
     else()
         set(_dl_args
-            GIT_REPOSITORY "https://github.com/${_GR4_EP_GIT_REPO_BASE}/${_repo_name}.git"
-            GIT_TAG ${_GR4_EP_GIT_TAG}
+            GIT_REPOSITORY "https://github.com/${_gr4_ep_git_repo_base}/${_repo_name}.git"
+            GIT_TAG ${_gr4_ep_git_tag}
             GIT_SHALLOW TRUE)
     endif()
     unset(_repo_name)
@@ -175,7 +176,7 @@ macro(gr4_ep name)
         ExternalProject_Add(${name}
             ${_dl_args}
             PREFIX "${CMAKE_BINARY_DIR}/_deps/${name}"
-            INSTALL_DIR "${_INSTALL_PREFIX}"
+            INSTALL_DIR "${_install_prefix}"
             UPDATE_DISCONNECTED TRUE
             ${ARGN}
         )
@@ -183,7 +184,7 @@ macro(gr4_ep name)
         ExternalProject_Add(${name}
             ${_dl_args}
             PREFIX "${CMAKE_BINARY_DIR}/_deps/${name}"
-            INSTALL_DIR "${_INSTALL_PREFIX}"
+            INSTALL_DIR "${_install_prefix}"
             ${ARGN}
         )
     endif()
@@ -224,7 +225,7 @@ if(CUSTOM_EP_ENABLE AND DEFINED CUSTOM_EP_URL AND NOT "${CUSTOM_EP_URL}" STREQUA
     if("${_custom_name}" STREQUAL "")
         set(_custom_name "custom-ep")
     endif()
-    list(APPEND _GR4_EP_NAMES "${_custom_name}")
+    list(APPEND _gr4_ep_names "${_custom_name}")
     message(STATUS "custom-ep: ${_custom_name} <- ${CUSTOM_EP_URL}")
 
     set(_custom_depends)
@@ -237,8 +238,8 @@ if(CUSTOM_EP_ENABLE AND DEFINED CUSTOM_EP_URL AND NOT "${CUSTOM_EP_URL}" STREQUA
         GIT_TAG "${CUSTOM_EP_TAG}"
         GIT_SHALLOW TRUE
         PREFIX "${CMAKE_BINARY_DIR}/_deps/${_custom_name}"
-        INSTALL_DIR "${_INSTALL_PREFIX}"
-        CMAKE_ARGS ${_EP_COMMON_ARGS}
+        INSTALL_DIR "${_install_prefix}"
+        CMAKE_ARGS ${_ep_common_args}
         DEPENDS ${_custom_depends}
         EXCLUDE_FROM_ALL TRUE
     )
@@ -248,13 +249,13 @@ endif()
 # ---- update-deps: refresh fetched ExternalProject repos ----
 # Runs git pull --ff-only in each fetched source directory.
 # Skips repos that haven't been fetched yet or are using local checkouts.
-foreach(_name ${_GR4_EP_NAMES})
-    set(_sd "${CMAKE_BINARY_DIR}/_deps/${_name}/src/${_name}")
-    if(NOT TARGET ${_name} OR EXISTS "${CMAKE_SOURCE_DIR}/${_name}/CMakeLists.txt")
+foreach(name ${_gr4_ep_names})
+    set(_sd "${CMAKE_BINARY_DIR}/_deps/${name}/src/${name}")
+    if(NOT TARGET ${name} OR EXISTS "${CMAKE_SOURCE_DIR}/${name}/CMakeLists.txt")
         continue()
     endif()
     list(APPEND _update_cmds
-        COMMAND ${CMAKE_COMMAND} -E echo "  -- ${_name}: git pull --ff-only"
+        COMMAND ${CMAKE_COMMAND} -E echo "  -- ${name}: git pull --ff-only"
         COMMAND git -C "${_sd}" pull --ff-only
     )
     unset(_sd)
@@ -266,10 +267,11 @@ if(_update_cmds)
         COMMAND ${CMAKE_COMMAND} -E echo ""
         COMMAND ${CMAKE_COMMAND} -E echo "Rebuild with: cmake --build ${CMAKE_BINARY_DIR}"
         USES_TERMINAL
+        COMMENT "Pull latest from each ExternalProject repo"
     )
     unset(_update_cmds)
 endif()
-unset(_GR4_EP_NAMES)
+unset(_gr4_ep_names)
 
 # ---- Workspace smoke test (delegated to workspace/ subtree) ----
 if(CONFIG_ENABLE_GR4_CORE)

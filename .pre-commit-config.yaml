@@ -1,8 +1,9 @@
-# pre-commit config for gnuradio4-dev.
+# pre-commit config for gnuradio4-workspace.
 # Run: prek run --all-files   (or: pre-commit run --all-files)
 #
 # NOT in pre-commit:
 #   markdownlint — .md files are design docs, not committed code.
+#   cmake-format  — cmake-lint handles style; format is opt-in via editor.
 
 repos:
   # --- File-level hygiene ---
@@ -44,6 +45,21 @@ repos:
     hooks:
       - id: clang-format
         types_or: [c++, c]
+
+  # --- CMake ---
+  - repo: https://github.com/cheshirekow/cmake-format-precommit
+    rev: v0.6.13
+    hooks:
+      - id: cmake-lint
+        additional_dependencies: ['pyyaml']
+        # exclude cmake-kconfig vendored files (upstream repo conventions differ)
+        exclude: |
+          (?x)^(
+            cmake/kconfig\.cmake|
+            cmake/extensions\.cmake|
+            cmake/python\.cmake|
+            scripts/kconfig/.*
+          )$
 
   # --- GitHub Actions ---
   - repo: https://github.com/rhysd/actionlint

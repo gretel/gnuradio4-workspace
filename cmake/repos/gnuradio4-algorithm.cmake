@@ -4,8 +4,8 @@
 # --------------------------------------------------------------------------
 
 if(CONFIG_ENABLE_GR4_ALGORITHM)
-    set(_EP_ALGORITHM_ARGS ${_EP_COMMON_ARGS})
-    list(APPEND _EP_ALGORITHM_ARGS
+    set(_ep_algorithm_args ${_ep_common_args})
+    list(APPEND _ep_algorithm_args
         -DENABLE_TESTING=${CONFIG_ENABLE_TESTING}
         -DENABLE_EXAMPLES=${CONFIG_ENABLE_EXAMPLES}
         -DGR_USE_FETCHCONTENT_DEPS=${CONFIG_USE_FETCHCONTENT}
@@ -13,13 +13,13 @@ if(CONFIG_ENABLE_GR4_ALGORITHM)
     )
 
     set(GR4_LIBRARY_GIT_TAG "main" CACHE STRING "Git ref for gnuradio4-library")
-    set(_GR4_EP_GIT_TAG "${GR4_LIBRARY_GIT_TAG}")
-    set(_GR4_EP_GIT_REPO_BASE "gretel")
+    set(_gr4_ep_git_tag "${GR4_LIBRARY_GIT_TAG}")
+    set(_gr4_ep_git_repo_base "gretel")
     gr4_ep(gnuradio4-algorithm
         GIT_REPO gnuradio4-library
-        CMAKE_ARGS ${_EP_ALGORITHM_ARGS}
+        CMAKE_ARGS ${_ep_algorithm_args}
         DEPENDS gnuradio4-core
     )
-    set(_GR4_EP_GIT_TAG "${GR4_GIT_TAG}")
-    set(_GR4_EP_GIT_REPO_BASE "gnuradio")
+    set(_gr4_ep_git_tag "${GR4_GIT_TAG}")
+    set(_gr4_ep_git_repo_base "gnuradio")
 endif()

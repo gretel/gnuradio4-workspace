@@ -5,8 +5,8 @@
 # --------------------------------------------------------------------------
 
 if(CONFIG_ENABLE_GR4_BLOCKS)
-    set(_EP_BLOCKS_ARGS ${_EP_COMMON_ARGS})
-    list(APPEND _EP_BLOCKS_ARGS
+    set(_ep_blocks_args ${_ep_common_args})
+    list(APPEND _ep_blocks_args
         -DENABLE_TESTING=${CONFIG_ENABLE_TESTING}
         -DENABLE_EXAMPLES=${CONFIG_ENABLE_EXAMPLES}
         -DGR_USE_FETCHCONTENT_DEPS=${CONFIG_USE_FETCHCONTENT}
@@ -16,13 +16,13 @@ if(CONFIG_ENABLE_GR4_BLOCKS)
     )
 
     set(GR4_BLOCKS_GIT_TAG "main" CACHE STRING "Git ref for gnuradio4-blocks")
-    set(_GR4_EP_GIT_TAG "${GR4_BLOCKS_GIT_TAG}")
-    set(_GR4_EP_GIT_REPO_BASE "gretel")
+    set(_gr4_ep_git_tag "${GR4_BLOCKS_GIT_TAG}")
+    set(_gr4_ep_git_repo_base "gretel")
     gr4_ep(gnuradio4-blocks
-        CMAKE_ARGS ${_EP_BLOCKS_ARGS}
+        CMAKE_ARGS ${_ep_blocks_args}
         DEPENDS gnuradio4-algorithm
     )
     # Reset to defaults so subsequent repos don't inherit
-    set(_GR4_EP_GIT_TAG "${GR4_GIT_TAG}")
-    set(_GR4_EP_GIT_REPO_BASE "gnuradio")
+    set(_gr4_ep_git_tag "${GR4_GIT_TAG}")
+    set(_gr4_ep_git_repo_base "gnuradio")
 endif()

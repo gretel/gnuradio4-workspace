@@ -204,6 +204,24 @@ Place a local checkout at repo root (e.g. `gnuradio4-core/CMakeLists.txt`) to ov
 prek run --all-files
 ```
 
+## External dependencies
+
+This workspace incorporates code from the following projects:
+
+| Project | Files | License |
+|---------|-------|---------|
+| [cmake-kconfig](https://github.com/jameswalmsley/cmake-kconfig) (adapted from Zephyr RTOS) | `cmake/kconfig.cmake`, `cmake/extensions.cmake`, `cmake/python.cmake`, `scripts/kconfig/kconfig.py`, `scripts/kconfig/menuconfig.py` | Apache-2.0 |
+| [Kconfiglib](https://github.com/ulfalizer/Kconfiglib) | `scripts/kconfig/kconfiglib.py` | ISC |
+| [gnuradio4-core](https://github.com/gnuradio/gnuradio4-core) | fetched at build time | MIT |
+| [gnuradio4-library](https://github.com/gnuradio/gnuradio4-library) | fetched at build time | MIT |
+| [gnuradio4-blocks](https://github.com/gnuradio/gnuradio4-blocks) | fetched at build time | MIT |
+| [gr4-incubator](https://github.com/gnuradio/gr4-incubator) | fetched at build time | MIT |
+| [gr4-control-plane](https://github.com/gnuradio/gnuradio4-control-plane) | fetched at build time | MIT |
+
+Build toolchain (Brewfile): ccache, cmake, llvm, ninja, pkgconf — via Homebrew.
+
+cmake-format / cmake-lint configuration in `.cmake-format.yaml`.
+
 ## License
 
 MIT — workspace scaffolding. Sub-projects retain their own licenses.
