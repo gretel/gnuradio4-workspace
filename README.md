@@ -47,12 +47,6 @@ cmake --preset windows -DBUILD_CONFIG=sdk
 cmake --build build/dev
 ```
 
-> **Windows notes**
-> - Install prerequisites with `winget` (see [Prerequisites](#prerequisites)).
-> - Block registry and plugins are disabled by default (the plugin loader uses `dlopen`, which is not available on Windows/MinGW). Override via `CONFIG_ENABLE_BLOCK_REGISTRY` / `CONFIG_ENABLE_BLOCK_PLUGINS` in the Windows preset.
-> - The `full` build profile is not supported on Windows (it enables block plugins).
-> - Known test issues on Windows: `qa_Tags` (`CONTEXT` identifier collision with `winnt.h`), `qa_thread_affinity` (POSIX `SCHED_*` constants not available). These are guarded at compile time.
-
 ## Build profiles
 
 Three profiles in `configs/` control what gets built:
@@ -64,6 +58,13 @@ Three profiles in `configs/` control what gets built:
 | `full` | `full_defconfig` | on (Werror) | on | Full SDK with control-plane, requires cpp-httplib |
 
 The SDK profile is the default (`-DBUILD_CONFIG=sdk`). `CONFIG_ENABLE_GR4_CORE=y` auto-selects library + blocks via Kconfig dependency chains.
+
+## Windows
+
+- Install prerequisites with `winget` (see [Prerequisites](#prerequisites)).
+- Block registry and plugins are disabled by default (the plugin loader uses `dlopen`, which is not available on Windows/MinGW). Override via `CONFIG_ENABLE_BLOCK_REGISTRY` / `CONFIG_ENABLE_BLOCK_PLUGINS` in the Windows preset.
+- The `full` build profile is not supported on Windows (it enables block plugins).
+- Known test issues: `qa_Tags` (`CONTEXT` identifier collision with `winnt.h`), `qa_thread_affinity` (POSIX `SCHED_*` constants not available). These are guarded at compile time.
 
 ## Quick reference
 
