@@ -56,7 +56,7 @@ cmake --build build/dev
 
 ## Build profiles
 
-Three profiles in `configs/` control what gets built:
+Defconfig files in `configs/` control which features are enabled and what gets built (orthogonal to the platform preset — pair any profile with any preset):
 
 | Profile | File | Testing | HTTP / control-plane | Use case |
 |---------|------|---------|---------------------|----------|
@@ -68,17 +68,19 @@ The SDK profile is the default (`-DBUILD_CONFIG=sdk`). `CONFIG_ENABLE_GR4_CORE=y
 
 ## Quick reference
 
+Two orthogonal axes control the build: **presets** pick the platform and toolchain (see [Presets](#presets)), while `-DBUILD_CONFIG=<profile>` picks the feature set (see [Build profiles](#build-profiles)).
+
 | Command | What it does |
 |---------|-------------|
-| `cmake --preset <platform> -DBUILD_CONFIG=<profile>` | configure (platform: `macos`/`linux`/`windows`) |
+| `cmake --preset <platform> -DBUILD_CONFIG=<profile>` | configure |
 | `cmake --build build/dev` | build all repos |
-| `cmake --build build/dev --target menuconfig` | interactive Kconfig TUI (requires Ninja, run after first build) |
-| `cmake -B build/dev` | reconfigure after menuconfig changes |
 | `cmake --build build/dev --target clean` | clean build artifacts (keeps CMake cache) |
-| `cmake --workflow --preset <platform>` | configure + build + test, one shot (native presets: `macos`, `linux`, `windows`) |
+| `cmake --install build/dev --prefix <path>` | copy SDK to a stable path (e.g. `/opt/gnuradio4`) |
+| `cmake --workflow --preset <platform>` | configure + build + test, one shot |
+| `cmake -B build/dev` | reconfigure after defconfig edits or menuconfig |
+| `cmake --build build/dev --target menuconfig` | interactive Kconfig TUI — toggle individual symbols on/off, then `cmake -B build/dev` to apply |
 | `cmake --build build/dev --target update-deps` | git pull --ff-only in each fetched ExternalProject repo |
 | `ctest --test-dir build/dev/workspace --output-on-failure` | workspace smoke tests |
-| `cmake --install build/dev --prefix <path>` | copy SDK to a stable path (e.g. `/opt/gnuradio4`) |
 
 ## Cleaning
 
@@ -174,6 +176,8 @@ cmake --install build/dev --prefix /opt/gnuradio4
 Place a local checkout at the repo root (e.g. `gnuradio4-core/CMakeLists.txt`) to override GitHub fetch — the superbuild uses it as `SOURCE_DIR` automatically.
 
 ## Presets
+
+CMake presets define the platform, toolchain, and build directory (orthogonal to `-DBUILD_CONFIG` — pair any preset with any profile):
 
 | Target | Preset | Build dir | Toolchain |
 |--------|--------|-----------|-----------|
