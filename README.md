@@ -8,94 +8,92 @@ gnuradio4-core ──→ gnuradio4-library ──→ gnuradio4-blocks ──→ 
 
 Builds three repos in dependency order via `ExternalProject_Add`, each installing to a shared prefix. The `workspace/` directory is where you build your own flowgraph apps against the installed SDK.
 
+## Prerequisites
+
+```sh
+# macOS
+brew bundle
+
+# Linux
+sudo apt-get install -y cmake ninja-build ccache g++-14 make pkgconf
+
+# Optional dependencies (enabled by build profile):
+#   libsoundio-dev     – audio blocks (GR4_ENABLE_AUDIO)
+#   libcpp-httplib-dev – HTTP tests and control-plane (GR4_ENABLE_HTTP)
+#   soapysdr-dev       – SDR blocks (GR4_ENABLE_SDR)
+
+# Windows (ARM64 or x86_64)
+winget install -e --id Kitware.CMake
+winget install -e --id Ninja-build.Ninja
+winget install -e --id MartinStorsjo.LLVM-MinGW.UCRT
+winget install -e --id bloodrock.pkg-config-lite
+```
+
 ## Quick start
 
-Configure, build, and smoke-test with one platform preset. Missing deps are fetched automatically (see [Prerequisites](#prerequisites) for optional system deps).
+Configure, build, and smoke-test with one platform preset. Missing source dependencies are fetched from GitHub automatically.
 
 ```sh
 # ── macOS ──
 cmake --preset macos -DBUILD_CONFIG=sdk
 cmake --build build/dev
+
 # ── Linux (requires gcc-14 / clang-20 as default) ──
 CC=gcc-14 CXX=g++-14 cmake --preset linux -DBUILD_CONFIG=sdk
 cmake --build build/dev
+
 # ── Windows (ARM64 or x86_64, requires LLVM MinGW) ──
 cmake --preset windows -DBUILD_CONFIG=sdk
 cmake --build build/dev
 ```
 
 > **Windows notes**
-> - Install prerequisites with `winget` (see below).
-> - Block registry and plugins are disabled by default (the plugin loader uses `dlopen`, which is not available on Windows/MinGW — see `CONFIG_ENABLE_BLOCK_REGISTRY` / `CONFIG_ENABLE_BLOCK_PLUGINS` in the Windows preset).
+> - Install prerequisites with `winget` (see [Prerequisites](#prerequisites)).
+> - Block registry and plugins are disabled by default (the plugin loader uses `dlopen`, which is not available on Windows/MinGW). Override via `CONFIG_ENABLE_BLOCK_REGISTRY` / `CONFIG_ENABLE_BLOCK_PLUGINS` in the Windows preset.
 > - The `full` build profile is not supported on Windows (it enables block plugins).
 > - Known test issues on Windows: `qa_Tags` (`CONTEXT` identifier collision with `winnt.h`), `qa_thread_affinity` (POSIX `SCHED_*` constants not available). These are guarded at compile time.
+
+## Build profiles
+
+Three profiles in `configs/` control what gets built:
+
+| Profile | File | Testing | HTTP / control-plane | Use case |
+|---------|------|---------|---------------------|----------|
+| `sdk`  | `sdk_defconfig`  | off | off | Minimal SDK, no optional system deps needed |
+| `ci`   | `ci_defconfig`   | on (Werror) | off | CI / QA, same deps as sdk |
+| `full` | `full_defconfig` | on (Werror) | on | Full SDK with control-plane, requires cpp-httplib |
+
+The SDK profile is the default (`-DBUILD_CONFIG=sdk`). `CONFIG_ENABLE_GR4_CORE=y` auto-selects library + blocks via Kconfig dependency chains.
 
 ## Quick reference
 
 | Command | What it does |
 |---------|-------------|
 | `cmake --preset <platform> -DBUILD_CONFIG=<profile>` | configure (platform: `macos`/`linux`/`windows`) |
-| `cmake --build build/dev` | build all repos for the dev target |
+| `cmake --build build/dev` | build all repos |
 | `cmake --build build/dev --target menuconfig` | interactive Kconfig TUI (requires Ninja, run after first build) |
 | `cmake -B build/dev` | reconfigure after menuconfig changes |
 | `cmake --build build/dev --target clean` | clean build artifacts (keeps CMake cache) |
 | `cmake --workflow --preset <platform>` | configure + build + test, one shot (native presets: `macos`, `linux`, `windows`) |
 | `cmake --build build/dev --target update-deps` | git pull --ff-only in each fetched ExternalProject repo |
 | `ctest --test-dir build/dev/workspace --output-on-failure` | workspace smoke tests |
-| `cmake --install build/dev --prefix <path>` | copy SDK to a stable path (e.g. `/opt/gnuradio4`) for shared reuse |
-
-## SDK install
-
-Downstream CMakeLists.txt:
-
-```cmake
-find_package(gnuradio4 CONFIG REQUIRED)
-target_link_libraries(my_app PRIVATE gnuradio4::gnuradio-core)
-```
-
-Point `CMAKE_PREFIX_PATH` at the build output (`build/dev/_install/`). To move it to a stable system path:
-
-```sh
-cmake --install build/dev --prefix /opt/gnuradio4
-```
-
-## Build profiles
-
-Three profiles in `configs/` control what gets built:
-
-| Profile | File | What |
-|---------|------|------|
-| `sdk`  | `sdk_defconfig`  | Three repos, minimal, no tests |
-| `ci`   | `ci_defconfig`   | + tests + Werror |
-| `full` | `full_defconfig` | Full SDK: control-plane, tests, examples |
-
-The SDK profile is the default. `CONFIG_ENABLE_GR4_CORE=y` auto-selects library + blocks via Kconfig dependency chains.
-
-## Build hierarchy
-
-All native platform builds share a single build directory:
-
-| Target | Build dir |
-|--------|-----------|
-| native dev | `build/dev` |
+| `cmake --install build/dev --prefix <path>` | copy SDK to a stable path (e.g. `/opt/gnuradio4`) |
 
 ## Cleaning
 
-Two options, depending on how thorough you need to be:
-
 ```sh
-# 1. Clean build artifacts, keep CMake cache (fastest, good for rebuilds)
+# Clean build artifacts, keep CMake cache (fastest, good for rebuilds)
 cmake --build build/dev --target clean
 
-# 2. Wipe the build directory entirely (full reconfigure on next build)
+# Wipe the build directory entirely (full reconfigure on next build)
 rm -rf build/dev
 ```
 
-After a full wipe (`rm -rf build/dev`), the next `cmake --preset …` will re-fetch all external sources and start from scratch. This is also the correct way to switch between `BUILD_CONFIG` profiles — reconfigure from a clean directory.
+After a full wipe, the next `cmake --preset …` will re-fetch all external sources from scratch. This is also the correct way to switch between `BUILD_CONFIG` profiles — reconfigure from a clean build directory.
 
 ## CI builds (pinning dependencies)
 
-By default all ExternalProject repos track `main`. For reproducible CI runs, pin to a specific commit via `-DGR4_GIT_TAG=<sha>`:
+By default all ExternalProject repos track `main`. For reproducible CI runs, pin to a specific commit:
 
 ```sh
 cmake --preset macos -DBUILD_CONFIG=ci -DGR4_GIT_TAG=abc1234
@@ -116,11 +114,11 @@ cmake --build build/dev --target update-deps
 cmake --build build/dev           # rebuild
 ```
 
-This runs `git pull --ff-only` in each cached source dir. Skips repos that haven't been fetched yet or are using local checkouts.
+Skips repos that haven't been fetched yet or are using local checkouts.
 
 ### Full re-fetch
 
-Delete the cached source + build artifacts entirely and start from scratch:
+Delete the cached source and build directories for specific repos, then reconfigure:
 
 ```sh
 rm -rf build/dev/_deps/gnuradio4-core*
@@ -149,34 +147,20 @@ cmake --build build/dev
 cmake --preset macos -DBUILD_CONFIG=sdk -DEP_UPDATE_DISCONNECTED=OFF
 ```
 
-## Prerequisites
+## SDK install
 
-```sh
-# macOS
-brew bundle
+Downstream CMakeLists.txt:
 
-# Linux
-sudo apt-get install -y cmake ninja-build ccache g++-14 make pkgconf
-
-# Optional dependencies (enabled by build profile):
-#   libsoundio-dev     – audio blocks (GR4_ENABLE_AUDIO)
-#   libcpp-httplib-dev – HTTP tests and control-plane (GR4_ENABLE_HTTP)
-#   soapysdr-dev       – SDR blocks (GR4_ENABLE_SDR)
-
-# Windows (ARM64 or x86_64)
-winget install -e --id Kitware.CMake
-winget install -e --id Ninja-build.Ninja
-winget install -e --id MartinStorsjo.LLVM-MinGW.UCRT
-winget install -e --id bloodrock.pkg-config-lite
+```cmake
+find_package(gnuradio4 CONFIG REQUIRED)
+target_link_libraries(my_app PRIVATE gnuradio4::gnuradio-core)
 ```
 
-## Presets
+Point `CMAKE_PREFIX_PATH` at the build output (`build/dev/_install/`). To move it to a stable system path:
 
-| Target | Preset | Build dir | Toolchain |
-|--------|--------|-----------|-----------|
-| macOS | `macos` | `build/dev` | Homebrew LLVM |
-| Linux | `linux` | `build/dev` | gcc-14+ / clang-20+ |
-| Windows | `windows` | `build/dev` | LLVM MinGW clang++ |
+```sh
+cmake --install build/dev --prefix /opt/gnuradio4
+```
 
 ## Split repos
 
@@ -186,7 +170,15 @@ winget install -e --id bloodrock.pkg-config-lite
 | [gnuradio4-library](https://github.com/gnuradio/gnuradio4-library) | DSP / algorithm library |
 | [gnuradio4-blocks](https://github.com/gnuradio/gnuradio4-blocks) | Standard MIT-licensed block implementations (audio, SDR, etc.) |
 
-Place a local checkout at repo root (e.g. `gnuradio4-core/CMakeLists.txt`) to override GitHub fetch — the superbuild uses it as `SOURCE_DIR` automatically.
+Place a local checkout at the repo root (e.g. `gnuradio4-core/CMakeLists.txt`) to override GitHub fetch — the superbuild uses it as `SOURCE_DIR` automatically.
+
+## Presets
+
+| Target | Preset | Build dir | Toolchain |
+|--------|--------|-----------|-----------|
+| macOS | `macos` | `build/dev` | Homebrew LLVM |
+| Linux | `linux` | `build/dev` | gcc-14+ / clang-20+ |
+| Windows | `windows` | `build/dev` | LLVM MinGW clang++ |
 
 ## Lint
 
@@ -196,21 +188,18 @@ prek run --all-files
 
 ## External dependencies
 
-This workspace incorporates code from the following projects:
+This repository incorporates vendored code from the following projects:
 
 | Project | Files | License |
 |---------|-------|---------|
 | [cmake-kconfig](https://github.com/jameswalmsley/cmake-kconfig) (adapted from Zephyr RTOS) | `cmake/kconfig.cmake`, `cmake/extensions.cmake`, `cmake/python.cmake`, `scripts/kconfig/kconfig.py`, `scripts/kconfig/menuconfig.py` | Apache-2.0 |
 | [Kconfiglib](https://github.com/ulfalizer/Kconfiglib) | `scripts/kconfig/kconfiglib.py` | ISC |
-| [gnuradio4-core](https://github.com/gnuradio/gnuradio4-core) | fetched at build time | MIT |
-| [gnuradio4-library](https://github.com/gnuradio/gnuradio4-library) | fetched at build time | MIT |
-| [gnuradio4-blocks](https://github.com/gnuradio/gnuradio4-blocks) | fetched at build time | MIT |
-| [gr4-incubator](https://github.com/gnuradio/gr4-incubator) | fetched at build time | MIT |
-| [gr4-control-plane](https://github.com/gnuradio/gnuradio4-control-plane) | fetched at build time | MIT |
+
+Sub-projects (`gnuradio4-core`, `gnuradio4-library`, `gnuradio4-blocks`, `gr4-incubator`, `gr4-control-plane`) are fetched at build time under their own licenses.
 
 Build toolchain (Brewfile): ccache, cmake, llvm, ninja, pkgconf — via Homebrew.
 
-cmake-format / cmake-lint configuration in `.cmake-format.yaml`.
+cmake-format and cmake-lint configuration in `.cmake-format.yaml`.
 
 ## License
 
