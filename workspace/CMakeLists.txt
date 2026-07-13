@@ -43,9 +43,14 @@ target_compile_definitions(gnuradio4 PRIVATE
     GIT_REV="${GIT_REV}"
     WORKSPACE_VERSION="${WORKSPACE_VERSION}")
 
-target_link_libraries(gnuradio4 PRIVATE
-    gnuradio-core
-    gnuradio-options)
+# gnuradio4-core exports gnuradio-core with a bogus INTERFACE_LINK_LIBRARY
+# self-reference, producing a harmless-but-noisy duplicate-libraries warning
+# on Apple ld64. Silence it.
+if(APPLE)
+    target_link_options(gnuradio4 PRIVATE -Wl,-no_warn_duplicate_libraries)
+endif()
+
+target_link_libraries(gnuradio4 PRIVATE gnuradio-core)
 
 if(TARGET gnuradio-algorithm)
     target_link_libraries(gnuradio4 PRIVATE gnuradio-algorithm)
