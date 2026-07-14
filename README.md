@@ -17,12 +17,12 @@ brew bundle
 # Linux
 sudo apt-get install -y cmake ninja-build ccache g++-14 make pkgconf
 
-# Optional dependencies (enabled by build profile):
-#   libsoundio-dev     – audio blocks (GR4_ENABLE_AUDIO)
-#   libcpp-httplib-dev – HTTP tests and control-plane (GR4_ENABLE_HTTP)
-#   nlohmann-json-dev  – JSON  (gr4-control-plane)
-#   googletest-dev     – tests (gr4-control-plane)
-#   soapysdr-dev       – SDR blocks (GR4_ENABLE_SDR)
+# Linux — full profile extras (add to the apt-get line above):
+#   libcpp-httplib-dev  – HTTP / control-plane (GR4_ENABLE_HTTP)
+#   nlohmann-json3-dev  – JSON for gr4-control-plane
+#   libgtest-dev        – tests for gr4-control-plane
+#   libsoapysdr-dev     – SDR blocks (GR4_ENABLE_SDR)
+#   libsoundio-dev      – audio blocks (GR4_ENABLE_AUDIO)
 
 # Windows (ARM64 or x86_64)
 winget install -e --id Kitware.CMake
@@ -34,6 +34,9 @@ winget install -e --id bloodrock.pkg-config-lite
 ## Windows
 
 - Install prerequisites with `winget` (see [Prerequisites](#prerequisites)).
+- Optional libraries (cpp-httplib, nlohmann-json, GTest, SoapySDR) are
+  **automatically fetched** by CMake via `FetchContent` when needed on
+  Windows — no winget packages required.
 - Block registry and plugins are disabled by default (the plugin loader uses `dlopen`, which is not available on Windows/MinGW). Override via `CONFIG_ENABLE_BLOCK_REGISTRY` / `CONFIG_ENABLE_BLOCK_PLUGINS` in the Windows preset.
 - The `full` build profile is not supported on Windows (it enables block plugins).
 - Known test issues: `qa_Tags` (`CONTEXT` identifier collision with `winnt.h`), `qa_thread_affinity` (POSIX `SCHED_*` constants not available). These are guarded at compile time.
