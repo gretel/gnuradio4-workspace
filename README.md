@@ -20,6 +20,8 @@ sudo apt-get install -y cmake ninja-build ccache g++-14 make pkgconf
 # Optional dependencies (enabled by build profile):
 #   libsoundio-dev     – audio blocks (GR4_ENABLE_AUDIO)
 #   libcpp-httplib-dev – HTTP tests and control-plane (GR4_ENABLE_HTTP)
+#   nlohmann-json-dev  – JSON  (gr4-control-plane)
+#   googletest-dev     – tests (gr4-control-plane)
 #   soapysdr-dev       – SDR blocks (GR4_ENABLE_SDR)
 
 # Windows (ARM64 or x86_64)

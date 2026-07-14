@@ -207,6 +207,16 @@ if(CONFIG_ENABLE_SDR)
     message(STATUS "SoapySDR found: ${SoapySDR_DIR}")
 endif()
 
+# ---- nlohmann_json (required by gr4-control-plane when enabled) ----
+if(CONFIG_ENABLE_GR4_CONTROL_PLANE)
+    find_package(nlohmann_json CONFIG QUIET)
+    if(NOT nlohmann_json_FOUND)
+        message(FATAL_ERROR "CONFIG_ENABLE_GR4_CONTROL_PLANE=y requires nlohmann_json (nlohmann-json).\n"
+            "Install with: brew install nlohmann-json")
+    endif()
+    message(STATUS "nlohmann_json found: ${nlohmann_json_DIR}")
+endif()
+
 # ---- Propagate discovered dep paths to all sub-projects -----
 # Passing the explicit directories ensures sub-project CMakeCache entries
 # are overridden even when ExternalProject configure is cached from a
@@ -217,6 +227,9 @@ if(CONFIG_ENABLE_HTTP AND DEFINED httplib_DIR)
 endif()
 if(CONFIG_ENABLE_SDR AND DEFINED SoapySDR_DIR)
     list(APPEND _ep_common_args -DSoapySDR_DIR=${SoapySDR_DIR})
+endif()
+if(CONFIG_ENABLE_GR4_CONTROL_PLANE AND DEFINED nlohmann_json_DIR)
+    list(APPEND _ep_common_args -Dnlohmann_json_DIR=${nlohmann_json_DIR})
 endif()
 
 # ---- Alias: gnuradio4Library -> gnuradio4Algorithm ----
