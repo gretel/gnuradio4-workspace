@@ -42,9 +42,14 @@ if(CONFIG_ENABLE_GR4_CORE)
     set(GR4_CORE_GIT_TAG "main" CACHE STRING "Git ref for gnuradio4-core")
     set(_gr4_ep_git_tag "${GR4_CORE_GIT_TAG}")
     set(_gr4_ep_git_repo_base "gretel")
+    # Add CONTEXT_KEY alias to Tag.hpp (workaround for gnuradio4-library #
+    # having renamed CONTEXT→CONTEXT_KEY while core main still has CONTEXT).
+    set(_patchfile "${CMAKE_CURRENT_SOURCE_DIR}/patches/core-context-key.patch")
     gr4_ep(gnuradio4-core
         CMAKE_ARGS ${_ep_core_args}
+        PATCH_COMMAND patch -p1 -i "${_patchfile}"
     )
+    unset(_patchfile)
     # Reset to defaults so subsequent repos don't inherit
     set(_gr4_ep_git_tag "${GR4_GIT_TAG}")
     set(_gr4_ep_git_repo_base "gnuradio")

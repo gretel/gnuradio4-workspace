@@ -255,10 +255,6 @@ endif()
 if(CONFIG_ENABLE_GR4_CONTROL_PLANE AND DEFINED nlohmann_json_DIR)
     list(APPEND _ep_common_args -Dnlohmann_json_DIR=${nlohmann_json_DIR})
 endif()
-if(CONFIG_ENABLE_GR4_CONTROL_PLANE AND DEFINED Boost_DIR)
-    list(APPEND _ep_common_args -DBoost_DIR=${Boost_DIR})
-endif()
-
 # ---- Alias: gnuradio4Library -> gnuradio4Algorithm ----
 # gnuradio4-blocks (main) expects find_package(gnuradio4Algorithm CONFIG)
 # but gnuradio4-library installs as gnuradio4LibraryConfig.cmake.

@@ -9,10 +9,14 @@ if(CONFIG_ENABLE_GR4_CONTROL_PLANE)
     list(APPEND _ep_cplane_args
         -DENABLE_TESTING=${CONFIG_ENABLE_TESTING}
         -DGR_USE_FETCHCONTENT_DEPS=${CONFIG_USE_FETCHCONTENT}
-        # control-plane sets Boost_NO_BOOST_CMAKE ON (old module);
-        # CMake 4.x removed FindBoost.cmake, so force Boost CONFIG mode.
-        -DBoost_NO_BOOST_CMAKE=OFF
+        # control-plane sets Boost_NO_BOOST_CMAKE ON (non-cache, can't
+        # override via -D).  CMake 4.x removed FindBoost.cmake, so tell
+        # cmake to act as if CMP0167=NEW, forcing CONFIG mode.
+        -DCMAKE_POLICY_DEFAULT_CMP0167=NEW
     )
+    if(DEFINED Boost_DIR)
+        list(APPEND _ep_cplane_args "-DBoost_DIR=${Boost_DIR}")
+    endif()
 
     gr4_ep(gr4-control-plane
         GIT_REPO gnuradio4-control-plane
