@@ -183,6 +183,26 @@ else()
     message(STATUS "httplib: HTTP enabled — real cpp-httplib required on the system")
 endif()
 
+# ---- Alias: gnuradio4Library -> gnuradio4Algorithm ----
+# gnuradio4-blocks (main) expects find_package(gnuradio4Algorithm CONFIG)
+# but gnuradio4-library installs as gnuradio4LibraryConfig.cmake.
+# Provide a thin wrapper until upstream names converge.
+set(_gr4alg_dir "${_install_prefix}/lib/cmake/gnuradio4Algorithm")
+file(MAKE_DIRECTORY "${_gr4alg_dir}")
+set(_gr4alg_file "${_gr4alg_dir}/gnuradio4AlgorithmConfig.cmake")
+if(NOT EXISTS "${_gr4alg_file}")
+    file(WRITE "${_gr4alg_file}" [[
+# SPDX-License-Identifier: MIT
+# Thin alias: gnuradio4Algorithm -> gnuradio4Library
+# Provided until the upstream repo names converge.
+get_filename_component(_gr4_alg_dir "${CMAKE_CURRENT_LIST_FILE}" PATH)
+include("${_gr4_alg_dir}/../gnuradio4Library/gnuradio4LibraryConfig.cmake")
+]])
+    message(STATUS "gnuradio4Algorithm alias: created ${_gr4alg_file}")
+endif()
+unset(_gr4alg_dir)
+unset(_gr4alg_file)
+
 # ---- Git tag/ref for all GR4 ExternalProject repos ----
 # Override with -DGR4_GIT_TAG=<sha> in CI for reproducible builds.
 set(GR4_GIT_TAG "main" CACHE STRING "Git ref for all gnuradio4 ExternalProject repos")
