@@ -207,6 +207,18 @@ if(CONFIG_ENABLE_SDR)
     message(STATUS "SoapySDR found: ${SoapySDR_DIR}")
 endif()
 
+# ---- Propagate discovered dep paths to all sub-projects -----
+# Passing the explicit directories ensures sub-project CMakeCache entries
+# are overridden even when ExternalProject configure is cached from a
+# prior run (e.g. before the dep was installed).  Changing
+# _ep_common_args also forces ExternalProject to reconfigure.
+if(CONFIG_ENABLE_HTTP AND DEFINED httplib_DIR)
+    list(APPEND _ep_common_args -Dhttplib_DIR=${httplib_DIR})
+endif()
+if(CONFIG_ENABLE_SDR AND DEFINED SoapySDR_DIR)
+    list(APPEND _ep_common_args -DSoapySDR_DIR=${SoapySDR_DIR})
+endif()
+
 # ---- Alias: gnuradio4Library -> gnuradio4Algorithm ----
 # gnuradio4-blocks (main) expects find_package(gnuradio4Algorithm CONFIG)
 # but gnuradio4-library installs as gnuradio4LibraryConfig.cmake.
