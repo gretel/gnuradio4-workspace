@@ -102,6 +102,10 @@ set(_ep_common_args
     -DCMAKE_COLOR_DIAGNOSTICS=OFF
     -DUSE_CCACHE=${CONFIG_CACHE_CCACHE}
     "-DCMAKE_CXX_FLAGS_INIT=-Wno-psabi -Wno-error=null-dereference"
+    # Limit sub-project build parallelism to avoid OOM on constrained hosts
+    # (e.g. 6GB VM).  Sub-projects' internal cmake --build use all CPUs by
+    # default, causing OOM kills on heavy template TUs.
+    -DCMAKE_BUILD_PARALLEL_LEVEL=2
 )
 if(CMAKE_TOOLCHAIN_FILE)
     list(APPEND _ep_common_args -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
