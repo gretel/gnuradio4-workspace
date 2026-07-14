@@ -1,8 +1,12 @@
 // SPDX-License-Identifier: MIT
 // gnuradio4-workspace diagnostic entrypoint
 
+#include <algorithm>
 #include <iostream>
 #include <string>
+#include <vector>
+
+#include <gnuradio-4.0/BlockRegistry.hpp>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -69,6 +73,23 @@ int main() {
     std::cout << "  ▌ ▛▖▌▌▌▙▘▀▌▛▌▌▛▌▙▌ " << platform_name() << " / " << arch_name() << "  " << build_type_str() << '\n';
     std::cout << "  ▙▌▌▝▌▙▌▌▌█▌▙▌▌▙▌ ▌ " << compiler_id << '\n';
     std::cout << '\n';
+
+    // ---- Block registry listing ----
+    const auto& blockRegistry = gr::globalBlockRegistry();
+    auto        blockNames    = blockRegistry.keys();
+    std::sort(blockNames.begin(), blockNames.end());
+    auto last = std::unique(blockNames.begin(), blockNames.end());
+    blockNames.erase(last, blockNames.end());
+
+    std::cout << "Available blocks (" << blockNames.size() << "):\n";
+    if (blockNames.empty()) {
+        std::cout << "  (none / block registry disabled)\n";
+    } else {
+        for (const auto& name : blockNames) {
+            std::cout << "  " << name << '\n';
+        }
+    }
+    std::cout << std::flush;
 
     return 0;
 }

@@ -52,6 +52,18 @@ endif()
 
 target_link_libraries(gnuradio4 PRIVATE gnuradio-core)
 
+if(TARGET gnuradio-blocklib-core)
+    target_link_libraries(gnuradio4 PRIVATE gnuradio-blocklib-core)
+endif()
+
+# Ensure the shared block library can be found at runtime
+if(APPLE AND TARGET gnuradio4::GrBasicBlocksShared)
+    target_link_options(gnuradio4 PRIVATE "-Wl,-rpath,$<TARGET_FILE_DIR:gnuradio4::GrBasicBlocksShared>")
+endif()
+if(NOT APPLE AND TARGET gnuradio4::GrBasicBlocksShared)
+    target_link_options(gnuradio4 PRIVATE "-Wl,-rpath,$<TARGET_FILE_DIR:gnuradio4::GrBasicBlocksShared>")
+endif()
+
 if(TARGET gnuradio-algorithm)
     target_link_libraries(gnuradio4 PRIVATE gnuradio-algorithm)
     target_compile_definitions(gnuradio4 PRIVATE HAVE_GNURADIO4_ALGORITHM)
@@ -60,6 +72,12 @@ endif()
 if(TARGET gnuradio4::gr-basic)
     target_link_libraries(gnuradio4 PRIVATE gnuradio4::gr-basic)
     target_compile_definitions(gnuradio4 PRIVATE HAVE_GNURADIO4_BLOCKS)
+endif()
+
+# Link the actual shared block library so block registrations are available
+# at runtime. Skip HTTP blocks (GrHttpBlocksShared) — they require HTTP runtime.
+if(TARGET gnuradio4::GrBasicBlocksShared)
+    target_link_libraries(gnuradio4 PRIVATE gnuradio4::GrBasicBlocksShared)
 endif()
 
 # ---- Smoke test ----
