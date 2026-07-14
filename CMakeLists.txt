@@ -101,7 +101,7 @@ set(_ep_common_args
     -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
     -DCMAKE_COLOR_DIAGNOSTICS=OFF
     -DUSE_CCACHE=${CONFIG_CACHE_CCACHE}
-    -DCMAKE_CXX_FLAGS_INIT=-Wno-psabi -Wno-error=null-dereference
+    "-DCMAKE_CXX_FLAGS_INIT=-Wno-psabi -Wno-error=null-dereference"
 )
 if(CMAKE_TOOLCHAIN_FILE)
     list(APPEND _ep_common_args -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
