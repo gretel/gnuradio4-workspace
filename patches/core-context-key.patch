@@ -1,0 +1,8 @@
+--- a/core/include/gnuradio-4.0/Tag.hpp
++++ b/core/include/gnuradio-4.0/Tag.hpp
+@@ -209,6 +209,7 @@
+ inline EM_CONSTEXPR_STATIC DefaultTag<"context", std::string, "", "multiplexing key to orchestrate node settings/behavioural changes"> CONTEXT;
++inline constexpr auto& CONTEXT_KEY = CONTEXT;
+ inline EM_CONSTEXPR_STATIC DefaultTag<"time", std::uint64_t, "", "multiplexing UTC-time in [ns] when ctx should be applied"> CONTEXT_TIME; // TODO: for backward compatibility -> rename to `ctx_time'
+
+ inline EM_CONSTEXPR_STATIC DefaultTag<"reset_default", bool, "", "reset block state to stored default"> RESET_DEFAULTS;
