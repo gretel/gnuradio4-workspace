@@ -180,7 +180,31 @@ include("${_gr4_alg_dir}/../gnuradio4Library/gnuradio4LibraryConfig.cmake")
     unset(_gr4alg_dir)
     unset(_gr4alg_file)
 else()
-    message(STATUS "httplib: HTTP enabled — real cpp-httplib required on the system")
+    # Remove stale stub from a prior sdk/ci config (HTTP was off, stub created).
+    # If real httplib is also absent, the find below will fail cleanly.
+    set(_httplib_stub_file "${_install_prefix}/lib/cmake/httplib/httplibConfig.cmake")
+    if(EXISTS "${_httplib_stub_file}")
+        file(REMOVE "${_httplib_stub_file}")
+        message(STATUS "httplib-stub: removed stale stub (HTTP now enabled)")
+    endif()
+    unset(_httplib_stub_file)
+
+    find_package(httplib CONFIG QUIET)
+    if(NOT httplib_FOUND)
+        message(FATAL_ERROR "CONFIG_ENABLE_HTTP=y / CONFIG_ENABLE_GR4_CONTROL_PLANE=y requires cpp-httplib.\n"
+            "Install with: brew install cpp-httplib  (macOS) or apt install libcpp-httplib-dev (Debian)")
+    endif()
+    message(STATUS "httplib found: ${httplib_DIR}")
+endif()
+
+# ---- Early failure for SDR blocks (SoapySDR) ----
+if(CONFIG_ENABLE_SDR)
+    find_package(SoapySDR CONFIG QUIET)
+    if(NOT SoapySDR_FOUND)
+        message(FATAL_ERROR "CONFIG_ENABLE_SDR=y requires SoapySDR.\n"
+            "Install with: brew install soapysdr  (macOS) or apt install soapysdr-dev (Debian)")
+    endif()
+    message(STATUS "SoapySDR found: ${SoapySDR_DIR}")
 endif()
 
 # ---- Alias: gnuradio4Library -> gnuradio4Algorithm ----
