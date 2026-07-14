@@ -18,6 +18,7 @@ brew bundle
 sudo apt-get install -y cmake ninja-build ccache g++-14 make pkgconf
 
 # Linux — full profile extras (add to the apt-get line above):
+#   libboost-dev        – Boost (gr4-control-plane, Beast/WebSocket)
 #   libcpp-httplib-dev  – HTTP / control-plane (GR4_ENABLE_HTTP)
 #   nlohmann-json3-dev  – JSON for gr4-control-plane
 #   libgtest-dev        – tests for gr4-control-plane

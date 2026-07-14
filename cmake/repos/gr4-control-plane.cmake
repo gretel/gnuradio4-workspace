@@ -9,6 +9,9 @@ if(CONFIG_ENABLE_GR4_CONTROL_PLANE)
     list(APPEND _ep_cplane_args
         -DENABLE_TESTING=${CONFIG_ENABLE_TESTING}
         -DGR_USE_FETCHCONTENT_DEPS=${CONFIG_USE_FETCHCONTENT}
+        # control-plane sets Boost_NO_BOOST_CMAKE ON (old module);
+        # CMake 4.x removed FindBoost.cmake, so force Boost CONFIG mode.
+        -DBoost_NO_BOOST_CMAKE=OFF
     )
 
     gr4_ep(gr4-control-plane

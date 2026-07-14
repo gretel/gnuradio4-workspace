@@ -217,6 +217,19 @@ if(CONFIG_ENABLE_GR4_CONTROL_PLANE)
     message(STATUS "nlohmann_json found: ${nlohmann_json_DIR}")
 endif()
 
+# ---- Boost (required by gr4-control-plane for Beast/WebSocket) ----
+if(CONFIG_ENABLE_GR4_CONTROL_PLANE)
+    # CMake 4.x removed FindBoost.cmake.  control-plane sets
+    # Boost_NO_BOOST_CMAKE=ON (old module) but we override it to OFF
+    # in cmake/repos/gr4-control-plane.cmake.  Verify Boost CONFIG works.
+    find_package(Boost CONFIG QUIET)
+    if(NOT Boost_FOUND)
+        message(FATAL_ERROR "CONFIG_ENABLE_GR4_CONTROL_PLANE=y requires Boost (header-only).\n"
+            "Install with: brew install boost  (macOS) or apt install libboost-dev (Debian)")
+    endif()
+    message(STATUS "Boost found: ${Boost_DIR}")
+endif()
+
 # ---- Propagate discovered dep paths to all sub-projects -----
 # Passing the explicit directories ensures sub-project CMakeCache entries
 # are overridden even when ExternalProject configure is cached from a
@@ -230,6 +243,9 @@ if(CONFIG_ENABLE_SDR AND DEFINED SoapySDR_DIR)
 endif()
 if(CONFIG_ENABLE_GR4_CONTROL_PLANE AND DEFINED nlohmann_json_DIR)
     list(APPEND _ep_common_args -Dnlohmann_json_DIR=${nlohmann_json_DIR})
+endif()
+if(CONFIG_ENABLE_GR4_CONTROL_PLANE AND DEFINED Boost_DIR)
+    list(APPEND _ep_common_args -DBoost_DIR=${Boost_DIR})
 endif()
 
 # ---- Alias: gnuradio4Library -> gnuradio4Algorithm ----
