@@ -35,6 +35,11 @@ if(NOT BUILD_CONFIG)
 endif()
 include(kconfig)
 
+# ---- Precompile headers for faster sub-project test compilation ----
+option(GR4_USE_PRECOMPILE_HEADERS
+    "Use precompiled headers in sub-project test targets" OFF)
+mark_as_advanced(GR4_USE_PRECOMPILE_HEADERS)
+
 # ---- Windows: block plugins use dlopen — not yet ported to LoadLibrary ----
 if(WIN32 AND CONFIG_ENABLE_BLOCK_PLUGINS)
     message(FATAL_ERROR "BUILD_CONFIG=full / CONFIG_ENABLE_BLOCK_PLUGINS is not supported on Windows yet. "
@@ -250,7 +255,7 @@ endif()
 # are overridden even when ExternalProject configure is cached from a
 # prior run (e.g. before the dep was installed).  Changing
 # _ep_common_args also forces ExternalProject to reconfigure.
-if(CONFIG_ENABLE_HTTP AND DEFINED httplib_DIR)
+if(DEFINED httplib_DIR)
     list(APPEND _ep_common_args -Dhttplib_DIR=${httplib_DIR})
 endif()
 if(CONFIG_ENABLE_SDR AND DEFINED SoapySDR_DIR)
@@ -258,6 +263,9 @@ if(CONFIG_ENABLE_SDR AND DEFINED SoapySDR_DIR)
 endif()
 if(CONFIG_ENABLE_GR4_CONTROL_PLANE AND DEFINED nlohmann_json_DIR)
     list(APPEND _ep_common_args -Dnlohmann_json_DIR=${nlohmann_json_DIR})
+endif()
+if(GR4_USE_PRECOMPILE_HEADERS)
+    list(APPEND _ep_common_args -DGR4_USE_PRECOMPILE_HEADERS=ON)
 endif()
 # ---- Alias: gnuradio4Library -> gnuradio4Algorithm ----
 # gnuradio4-blocks (main) expects find_package(gnuradio4Algorithm CONFIG)
