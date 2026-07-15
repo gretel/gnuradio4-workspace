@@ -151,7 +151,7 @@ config GR4_CONTROL_PLANE_GIT_TAG
 
 config GR4_STUDIO_REPO_URL
     string "gr4-studio git URL"
-    default "https://github.com/altiolabs/gr4-studio.git"
+    default "https://github.com/gretel/gr4-studio.git"
     help
         Full git clone URL for the gr4-studio repo.
 
