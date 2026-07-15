@@ -14,6 +14,8 @@ if(CONFIG_ENABLE_GR4_INCUBATOR)
     )
 
     gr4_ep(gr4-incubator
+        GIT_URL "${CONFIG_GR4_INCUBATOR_REPO_URL}"
+        GIT_TAG "${CONFIG_GR4_INCUBATOR_GIT_TAG}"
         CMAKE_ARGS ${_ep_incubator_args}
         DEPENDS gnuradio4-core
     )

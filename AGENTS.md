@@ -70,15 +70,35 @@ Symbols in `Kconfig`. Build profiles pin `configs/*_defconfig`.
 
 ## Repos
 
-| Repo | Branch | Holds |
-|------|--------|-------|
-| `gretel/gnuradio4-core` | `interim/windows-test` (5 Win32 patches) | Runtime, scheduler, blocklib |
-| `gretel/gnuradio4-blocks` | `interim/windows-test` | Standard blocks (audio, SDR) |
-| `gnuradio/gnuradio4-library` | `main` | DSP / algorithm library (was `gnuradio4-algorithm`) |
-| `gnuradio/gr4-incubator` | `main` | Experimental blocks |
-| `gnuradio/gnuradio4-control-plane` | `main` | Server, WebSocket, plugins |
+Repo sources are configured via Kconfig (`menu "Repository sources"`). Each repo has a URL + git-ref symbol.
 
-Override fetch: place local checkout at repo root (e.g. `gnuradio4-core/CMakeLists.txt`).
+| Repo (target name) | Default URL | Default tag | Holds |
+|---------------------|-------------|-------------|-------|
+| `gnuradio4-core` | `https://github.com/gretel/gnuradio4-core.git` | `interim/windows-test` | Runtime, scheduler, blocklib |
+| `gnuradio4-algorithm` | `https://github.com/gretel/gnuradio4-library.git` | `main` | DSP / algorithm library |
+| `gnuradio4-blocks` | `https://github.com/gretel/gnuradio4-blocks.git` | `main` | Standard blocks (audio, SDR) |
+| `gr4-incubator` | `https://github.com/gnuradio/gr4-incubator.git` | `main` | Experimental blocks |
+| `gr4-control-plane` | `https://github.com/gnuradio/gnuradio4-control-plane.git` | `main` | Server, WebSocket, plugins |
+| `gr4-studio` | `https://github.com/altiolabs/gr4-studio.git` | `main` | Web UI (optional) |
+
+Override via Kconfig (`cmake --build build/dev --target menuconfig`) or `-D<SYMBOL>=<value>` on cmake command line.
+Local checkout override: place repo dir at workspace root (e.g. `gnuradio4-core/CMakeLists.txt`).
+
+## Upstream PR branches
+
+| Repo | Branch | Status |
+|------|--------|--------|
+| `gretel/gnuradio4-workspace` | `pr/kconfig-repo-urls` | Kconfig repo-source configurability + gr4-studio ExternalProject |
+| `gretel/gnuradio4-workspace` | `pr/pch-unity-build` | GR4_USE_PRECOMPILE_HEADERS propagation + httplib_DIR guard fix |
+| `gretel/gnuradio4-core` | `interim/windows-test` | Rebased onto upstream main (c35f5c8). Win32 patches + CONTEXT_KEY |
+| `gretel/gnuradio4-core` | `pr/pch-unity-build` | PCH support for test targets |
+| `gretel/gnuradio4-blocks` | `main` | Rebased onto upstream (74f9d64). CONTEXT_KEY fix + missing string include |
+| `gretel/gnuradio4-blocks` | `pr/pch-unity-build` | PCH support + CONTEXT_KEY fix + string include |
+| `gretel/gnuradio4-library` | `main` | Rebased onto upstream (07c93162). CONTEXT_KEY fix + GR_HTTP_ENABLED option |
+| `gretel/gnuradio4-library` | `pr/pch-unity-build` | PCH support + GR_HTTP_ENABLED fix |
+| `gretel/gr4-control-plane` | `feat/armv7-cross-ci` | Rebased onto upstream (7410d26). Studio sinks, armv7 CI |
+| `gretel/gr4-incubator` | `feat/iio-block` | Rebased onto upstream main (8182906c). IIO blocks |
+| (local) `gr4-studio` | `main` | 1 commit ahead of altiolabs. Session linking. Needs gretel fork for PR |
 
 ## Gotchas
 

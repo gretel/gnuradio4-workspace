@@ -90,6 +90,77 @@ config CUSTOM_EP_DEPENDS
 endif
 endmenu
 
+menu "Repository sources"
+    depends on ENABLE_GR4_CORE
+
+config GR4_CORE_REPO_URL
+    string "gnuradio4-core git URL"
+    default "https://github.com/gretel/gnuradio4-core.git"
+    help
+        Full git clone URL for the gnuradio4-core repo.
+        Default points to gretel fork with Windows/MinGW patches.
+
+config GR4_CORE_GIT_TAG
+    string "gnuradio4-core git ref"
+    default "interim/windows-test"
+    help
+        Git ref (branch/tag/commit) for gnuradio4-core.
+        Use "main" for upstream, "interim/windows-test" for gretel fork.
+
+config GR4_LIBRARY_REPO_URL
+    string "gnuradio4-library git URL"
+    default "https://github.com/gretel/gnuradio4-library.git"
+    help
+        Full git clone URL for the gnuradio4-library (algorithm) repo.
+        Default points to gretel fork.
+
+config GR4_LIBRARY_GIT_TAG
+    string "gnuradio4-library git ref"
+    default "main"
+
+config GR4_BLOCKS_REPO_URL
+    string "gnuradio4-blocks git URL"
+    default "https://github.com/gretel/gnuradio4-blocks.git"
+    help
+        Full git clone URL for the gnuradio4-blocks repo.
+        Default points to gretel fork.
+
+config GR4_BLOCKS_GIT_TAG
+    string "gnuradio4-blocks git ref"
+    default "main"
+
+config GR4_INCUBATOR_REPO_URL
+    string "gr4-incubator git URL"
+    default "https://github.com/gnuradio/gr4-incubator.git"
+    help
+        Full git clone URL for the gr4-incubator repo.
+
+config GR4_INCUBATOR_GIT_TAG
+    string "gr4-incubator git ref"
+    default "main"
+
+config GR4_CONTROL_PLANE_REPO_URL
+    string "gr4-control-plane git URL"
+    default "https://github.com/gnuradio/gnuradio4-control-plane.git"
+    help
+        Full git clone URL for the gr4-control-plane repo.
+
+config GR4_CONTROL_PLANE_GIT_TAG
+    string "gr4-control-plane git ref"
+    default "main"
+
+config GR4_STUDIO_REPO_URL
+    string "gr4-studio git URL"
+    default "https://github.com/altiolabs/gr4-studio.git"
+    help
+        Full git clone URL for the gr4-studio repo.
+
+config GR4_STUDIO_GIT_TAG
+    string "gr4-studio git ref"
+    default "main"
+
+endmenu
+
 menu "Features"
     depends on ENABLE_GR4_CORE
 

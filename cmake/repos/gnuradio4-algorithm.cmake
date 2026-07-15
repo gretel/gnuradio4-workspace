@@ -11,14 +11,11 @@ if(CONFIG_ENABLE_GR4_ALGORITHM)
         -DGR_USE_FETCHCONTENT_DEPS=${CONFIG_USE_FETCHCONTENT}
     )
 
-    set(GR4_LIBRARY_GIT_TAG "main" CACHE STRING "Git ref for gnuradio4-library")
-    set(_gr4_ep_git_tag "${GR4_LIBRARY_GIT_TAG}")
-    set(_gr4_ep_git_repo_base "gretel")
     gr4_ep(gnuradio4-algorithm
         GIT_REPO gnuradio4-library
+        GIT_URL "${CONFIG_GR4_LIBRARY_REPO_URL}"
+        GIT_TAG "${CONFIG_GR4_LIBRARY_GIT_TAG}"
         CMAKE_ARGS ${_ep_algorithm_args}
         DEPENDS gnuradio4-core
     )
-    set(_gr4_ep_git_tag "${GR4_GIT_TAG}")
-    set(_gr4_ep_git_repo_base "gnuradio")
 endif()

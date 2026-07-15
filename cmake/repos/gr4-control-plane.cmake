@@ -20,6 +20,8 @@ if(CONFIG_ENABLE_GR4_CONTROL_PLANE)
 
     gr4_ep(gr4-control-plane
         GIT_REPO gnuradio4-control-plane
+        GIT_URL "${CONFIG_GR4_CONTROL_PLANE_REPO_URL}"
+        GIT_TAG "${CONFIG_GR4_CONTROL_PLANE_GIT_TAG}"
         CMAKE_ARGS ${_ep_cplane_args}
         DEPENDS gnuradio4-core
     )

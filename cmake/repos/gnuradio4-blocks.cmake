@@ -15,14 +15,10 @@ if(CONFIG_ENABLE_GR4_BLOCKS)
         -DGR4_ENABLE_HTTP_TESTS=${CONFIG_ENABLE_HTTP}
     )
 
-    set(GR4_BLOCKS_GIT_TAG "main" CACHE STRING "Git ref for gnuradio4-blocks")
-    set(_gr4_ep_git_tag "${GR4_BLOCKS_GIT_TAG}")
-    set(_gr4_ep_git_repo_base "gretel")
     gr4_ep(gnuradio4-blocks
+        GIT_URL "${CONFIG_GR4_BLOCKS_REPO_URL}"
+        GIT_TAG "${CONFIG_GR4_BLOCKS_GIT_TAG}"
         CMAKE_ARGS ${_ep_blocks_args}
         DEPENDS gnuradio4-algorithm
     )
-    # Reset to defaults so subsequent repos don't inherit
-    set(_gr4_ep_git_tag "${GR4_GIT_TAG}")
-    set(_gr4_ep_git_repo_base "gnuradio")
 endif()

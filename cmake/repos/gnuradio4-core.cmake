@@ -39,17 +39,13 @@ if(CONFIG_ENABLE_GR4_CORE)
         # flags as its own -W flags. Strip CXX_FLAGS_INIT to avoid this.
         list(FILTER _ep_core_args EXCLUDE REGEX "CMAKE_CXX_FLAGS_INIT")
     endif()
-    set(GR4_CORE_GIT_TAG "main" CACHE STRING "Git ref for gnuradio4-core")
-    set(_gr4_ep_git_tag "${GR4_CORE_GIT_TAG}")
-    set(_gr4_ep_git_repo_base "gretel")
     # Add CONTEXT_KEY alias to Tag.hpp (workaround for gnuradio4-library #
     # having renamed CONTEXT→CONTEXT_KEY while core main still has CONTEXT).
     gr4_ep(gnuradio4-core
+        GIT_URL "${CONFIG_GR4_CORE_REPO_URL}"
+        GIT_TAG "${CONFIG_GR4_CORE_GIT_TAG}"
         CMAKE_ARGS ${_ep_core_args}
         PATCH_COMMAND grep -q CONTEXT_KEY core/include/gnuradio-4.0/Tag.hpp
             || patch -p1 -i "${CMAKE_CURRENT_SOURCE_DIR}/patches/core-context-key.patch"
     )
-    # Reset to defaults so subsequent repos don't inherit
-    set(_gr4_ep_git_tag "${GR4_GIT_TAG}")
-    set(_gr4_ep_git_repo_base "gnuradio")
 endif()

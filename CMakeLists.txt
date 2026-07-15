@@ -300,7 +300,7 @@ set(_gr4_ep_names)
 include(ExternalProject)
 # doc: Thin wrapper around ExternalProject_Add for gnuradio4 sub-repos.
 macro(gr4_ep name)
-    cmake_parse_arguments(_gr4 "" "GIT_REPO" "" ${ARGN})
+    cmake_parse_arguments(_gr4 "" "GIT_REPO;GIT_URL;GIT_TAG" "" ${ARGN})
     if(_gr4_GIT_REPO)
         set(_repo_name "${_gr4_GIT_REPO}")
         set(_src "${CMAKE_SOURCE_DIR}/${_gr4_GIT_REPO}")
@@ -312,6 +312,11 @@ macro(gr4_ep name)
     if(EXISTS "${_src}/CMakeLists.txt")
         message(STATUS "${name}: using local ${_src}/")
         set(_dl_args SOURCE_DIR "${_src}")
+    elseif(_gr4_GIT_URL)
+        set(_dl_args
+            GIT_REPOSITORY "${_gr4_GIT_URL}"
+            GIT_TAG ${_gr4_GIT_TAG}
+            GIT_SHALLOW TRUE)
     else()
         set(_dl_args
             GIT_REPOSITORY "https://github.com/${_gr4_ep_git_repo_base}/${_repo_name}.git"
@@ -347,6 +352,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/repos/gnuradio4-algorithm.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/repos/gnuradio4-blocks.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/repos/gr4-incubator.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/repos/gr4-control-plane.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/repos/gr4-studio.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/repos/workspace.cmake)
 
 # ---- install target: deploy SDK from ephemeral _INSTALL_PREFIX to stable prefix ----
