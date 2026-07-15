@@ -257,9 +257,8 @@ endif()
 if(CONFIG_ENABLE_SDR AND DEFINED SoapySDR_DIR)
     list(APPEND _ep_common_args -DSoapySDR_DIR=${SoapySDR_DIR})
 endif()
-if(CONFIG_ENABLE_GR4_CONTROL_PLANE AND DEFINED nlohmann_json_DIR)
-    list(APPEND _ep_common_args -Dnlohmann_json_DIR=${nlohmann_json_DIR})
-endif()
+# nlohmann_json_DIR is passed in gr4-control-plane.cmake, not here,
+# to avoid unused-cli warnings in sub-projects that don't need it.
 if(GR4_USE_PRECOMPILE_HEADERS)
     list(APPEND _ep_common_args -DGR4_USE_PRECOMPILE_HEADERS=ON)
 endif()

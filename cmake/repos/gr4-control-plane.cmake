@@ -17,6 +17,9 @@ if(CONFIG_ENABLE_GR4_CONTROL_PLANE)
     if(DEFINED Boost_DIR)
         list(APPEND _ep_cplane_args "-DBoost_DIR=${Boost_DIR}")
     endif()
+    if(DEFINED nlohmann_json_DIR)
+        list(APPEND _ep_cplane_args "-Dnlohmann_json_DIR=${nlohmann_json_DIR}")
+    endif()
 
     gr4_ep(gr4-control-plane
         GIT_REPO gnuradio4-control-plane
