@@ -121,6 +121,9 @@ macOS ld64 rescans by default. Linux needs `LINK_GROUP:RESCAN` for `gnuradio-blo
 - `BlockRegistry.hpp`: dllexport redeclaration warning suppressed with `-Wdll-attribute-on-redeclaration` pragma (MinGW+Clang only)
 - Known test failures (Windows only): `qa_Tags` (CONTEXT reference in test), `qa_thread_affinity` (POSIX SCHED_*)
 - ~45 min build (134 TUs via QEMU)
+- Ninja stdout buffered by `cmd.exe` over SSH — output appears only after the process exits.
+  Workarounds: build individual targets (`ninja -j1 target.exe`), redirect to a log file
+  (`ninja > build.log 2>&1`), or use PowerShell `Start-Process` background jobs.
 
 ### GIT_REV
 Baked at configure time. Reconfigure (`cmake -B build/dev`) after commit to pick up new hash.

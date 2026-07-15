@@ -3,7 +3,7 @@
 # gnuradio4-core — runtime, scheduler, blocklib, meta, plugin infrastructure
 # --------------------------------------------------------------------------
 # Variables consumed from parent scope:
-#   _EP_COMMON_ARGS, CONFIG_ENABLE_GR4_CORE, CONFIG_ENABLE_TESTING,
+#   _ep_common_args, CONFIG_ENABLE_GR4_CORE, CONFIG_ENABLE_TESTING,
 #   CONFIG_ENABLE_EXAMPLES, CONFIG_WARNINGS_AS_ERRORS, CONFIG_ENABLE_TBB,
 #   CONFIG_ENABLE_BLOCK_REGISTRY, CONFIG_ENABLE_BLOCK_PLUGINS,
 #   CONFIG_USE_FETCHCONTENT, CONFIG_ENABLE_MIT_ONLY, CONFIG_ENABLE_COVERAGE,

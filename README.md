@@ -41,6 +41,9 @@ winget install -e --id bloodrock.pkg-config-lite
 - Block registry and plugins are disabled by default (the plugin loader uses `dlopen`, which is not available on Windows/MinGW). Override via `CONFIG_ENABLE_BLOCK_REGISTRY` / `CONFIG_ENABLE_BLOCK_PLUGINS` in the Windows preset.
 - The `full` build profile is not supported on Windows (it enables block plugins).
 - Known test issues: `qa_Tags` (`CONTEXT` identifier collision with `winnt.h`), `qa_thread_affinity` (POSIX `SCHED_*` constants not available). These are guarded at compile time.
+- Ninja stdout buffered by `cmd.exe` over SSH — output only appears after the process exits.
+  Workarounds: build individual targets (`ninja -j1 target.exe`), redirect to a log file
+  (`ninja > build.log 2>&1`), or use a PowerShell background job.
 
 ## Quick start
 

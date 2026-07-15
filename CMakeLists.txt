@@ -113,10 +113,13 @@ if(CMAKE_TOOLCHAIN_FILE)
     # C compiler needed for cross-compilation; on native builds sub-projects auto-detect
     list(APPEND _ep_common_args -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER})
 endif()
+# Propagate top-level build tool so sub-builds use the same one (Ninja via presets)
+# ExternalProject auto-detects the generator but does not forward the make program
+# binary path; without this, sub-builds may fail on platforms where ninja is not on PATH.
+list(APPEND _ep_common_args -DCMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM})
 # Windows/MinGW: no libdl, suppress cascading -ldl link failures
 if(WIN32 OR MINGW)
     list(APPEND _ep_common_args -DCMAKE_DL_LIBS="")
-    list(APPEND _ep_common_args -DCMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM})
 endif()
 
 # MinGW: create empty libdl.a stub if llvm-ar is available.
@@ -327,10 +330,13 @@ macro(gr4_ep name)
             GIT_SHALLOW TRUE)
     endif()
     unset(_repo_name)
-    # Parallel jobs from Kconfig (0 = unlimited)
-    set(_gr4_build_jobs)
+    # Build parallelism from Kconfig (0 = unlimited)
+    # Note: BUILD_JOBS was removed from CMake's ExternalProject module in 4.x.
+    # Use BUILD_COMMAND with --parallel instead; this works for Ninja and all other generators.
+    set(_gr4_build_cmd)
     if(CONFIG_BUILD_JOBS GREATER 0)
-        set(_gr4_build_jobs BUILD_JOBS ${CONFIG_BUILD_JOBS})
+        set(_gr4_build_cmd
+            BUILD_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR> --parallel ${CONFIG_BUILD_JOBS})
     endif()
     if(EP_UPDATE_DISCONNECTED)
         ExternalProject_Add(${name}
@@ -338,7 +344,7 @@ macro(gr4_ep name)
             PREFIX "${CMAKE_BINARY_DIR}/_deps/${name}"
             INSTALL_DIR "${_install_prefix}"
             UPDATE_DISCONNECTED TRUE
-            ${_gr4_build_jobs}
+            ${_gr4_build_cmd}
             ${_gr4_UNPARSED_ARGUMENTS}
         )
     else()
@@ -346,11 +352,11 @@ macro(gr4_ep name)
             ${_dl_args}
             PREFIX "${CMAKE_BINARY_DIR}/_deps/${name}"
             INSTALL_DIR "${_install_prefix}"
-            ${_gr4_build_jobs}
+            ${_gr4_build_cmd}
             ${_gr4_UNPARSED_ARGUMENTS}
         )
     endif()
-    unset(_gr4_build_jobs)
+    unset(_gr4_build_cmd)
     unset(_src)
     unset(_dl_args)
 endmacro()
