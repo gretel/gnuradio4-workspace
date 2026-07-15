@@ -57,9 +57,8 @@ if(TARGET gnuradio-blocklib-core)
 endif()
 
 # Ensure the shared block library can be found at runtime
-if(APPLE AND TARGET gnuradio4::GrBasicBlocksShared)
-    target_link_options(gnuradio4 PRIVATE "-Wl,-rpath,$<TARGET_FILE_DIR:gnuradio4::GrBasicBlocksShared>")
-endif()
+# cmake on macOS auto-adds rpath for linked shared library targets; on
+# other platforms we add it explicitly.
 if(NOT APPLE AND TARGET gnuradio4::GrBasicBlocksShared)
     target_link_options(gnuradio4 PRIVATE "-Wl,-rpath,$<TARGET_FILE_DIR:gnuradio4::GrBasicBlocksShared>")
 endif()

@@ -338,14 +338,14 @@ macro(gr4_ep name)
             PREFIX "${CMAKE_BINARY_DIR}/_deps/${name}"
             INSTALL_DIR "${_install_prefix}"
             UPDATE_DISCONNECTED TRUE
-            ${ARGN}
+            ${_gr4_UNPARSED_ARGUMENTS}
         )
     else()
         ExternalProject_Add(${name}
             ${_dl_args}
             PREFIX "${CMAKE_BINARY_DIR}/_deps/${name}"
             INSTALL_DIR "${_install_prefix}"
-            ${ARGN}
+            ${_gr4_UNPARSED_ARGUMENTS}
         )
     endif()
     unset(_src)
