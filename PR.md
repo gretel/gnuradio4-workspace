@@ -39,9 +39,9 @@
 |----|--------|------|-------------|---------|
 | 9 | `main` (gretel) | `altiolabs/gr4-studio main` | Session linking from `grc_content`. NaN/transport guards. FFT buffer alignment (`gr::allocator::Aligned`). Fix YAML block-type serialization (drop `sanitizeScalar` quotes). | 2 |
 
-## gnuradio4-workspace (internal — no upstream repo exists)
+## gnuradio4-workspace
 
-These branches live on `gretel/gnuradio4-workspace`. There is no `gnuradio/gnuradio4-workspace` repo yet — the workspace is our own orchestrator. If we want to upstream it, we'd need to create the org repo first or contribute it as part of the broader GNU Radio 4 project.
+Target: `gnuradio/gnuradio4-workspace` (does not exist yet — author is ready to open PRs once the org repo is created).
 
 | PR | Branch | Description | Commits |
 |----|--------|-------------|---------|
