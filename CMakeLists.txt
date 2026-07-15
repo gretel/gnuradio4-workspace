@@ -107,10 +107,6 @@ set(_ep_common_args
     -DCMAKE_COLOR_DIAGNOSTICS=OFF
     -DUSE_CCACHE=${CONFIG_CACHE_CCACHE}
     "-DCMAKE_CXX_FLAGS_INIT=-Wno-psabi -Wno-error=null-dereference"
-    # Limit sub-project build parallelism to avoid OOM on constrained hosts
-    # (e.g. 6GB VM).  Sub-projects' internal cmake --build use all CPUs by
-    # default, causing OOM kills on heavy template TUs.
-    -DCMAKE_BUILD_PARALLEL_LEVEL=2
 )
 if(CMAKE_TOOLCHAIN_FILE)
     list(APPEND _ep_common_args -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
@@ -332,12 +328,18 @@ macro(gr4_ep name)
             GIT_SHALLOW TRUE)
     endif()
     unset(_repo_name)
+    # Parallel jobs from Kconfig (0 = unlimited)
+    set(_gr4_build_jobs)
+    if(CONFIG_BUILD_JOBS GREATER 0)
+        set(_gr4_build_jobs BUILD_JOBS ${CONFIG_BUILD_JOBS})
+    endif()
     if(EP_UPDATE_DISCONNECTED)
         ExternalProject_Add(${name}
             ${_dl_args}
             PREFIX "${CMAKE_BINARY_DIR}/_deps/${name}"
             INSTALL_DIR "${_install_prefix}"
             UPDATE_DISCONNECTED TRUE
+            ${_gr4_build_jobs}
             ${_gr4_UNPARSED_ARGUMENTS}
         )
     else()
@@ -345,9 +347,11 @@ macro(gr4_ep name)
             ${_dl_args}
             PREFIX "${CMAKE_BINARY_DIR}/_deps/${name}"
             INSTALL_DIR "${_install_prefix}"
+            ${_gr4_build_jobs}
             ${_gr4_UNPARSED_ARGUMENTS}
         )
     endif()
+    unset(_gr4_build_jobs)
     unset(_src)
     unset(_dl_args)
 endmacro()
@@ -360,7 +364,6 @@ include(${CMAKE_SOURCE_DIR}/cmake/repos/gnuradio4-algorithm.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/repos/gnuradio4-blocks.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/repos/gr4-incubator.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/repos/gr4-control-plane.cmake)
-include(${CMAKE_SOURCE_DIR}/cmake/repos/gr4-studio.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/repos/workspace.cmake)
 
 # ---- install target: deploy SDK from ephemeral _INSTALL_PREFIX to stable prefix ----

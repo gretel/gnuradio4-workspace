@@ -48,12 +48,6 @@ config ENABLE_GR4_CONTROL_PLANE
         REST API server for remote flowgraph control, block introspection,
         and dynamic reconfiguration.
 
-config ENABLE_GR4_STUDIO
-    bool "gr4-studio (Web UI)"
-    depends on ENABLE_GR4_CONTROL_PLANE
-    help
-        npm-based Web GUI served by the control-plane.
-
 config CUSTOM_EP_ENABLE
     bool "Add a custom ExternalProject repo"
     default n
@@ -147,16 +141,6 @@ config GR4_CONTROL_PLANE_REPO_URL
 
 config GR4_CONTROL_PLANE_GIT_TAG
     string "gr4-control-plane git ref"
-    default "main"
-
-config GR4_STUDIO_REPO_URL
-    string "gr4-studio git URL"
-    default "https://github.com/gretel/gr4-studio.git"
-    help
-        Full git clone URL for the gr4-studio repo.
-
-config GR4_STUDIO_GIT_TAG
-    string "gr4-studio git ref"
     default "main"
 
 endmenu
