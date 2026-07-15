@@ -58,6 +58,7 @@ repos:
             cmake/kconfig\.cmake|
             cmake/extensions\.cmake|
             cmake/python\.cmake|
+            cmake/sbom\.cmake|
             scripts/kconfig/.*
           )$
 

@@ -2,15 +2,7 @@
 name: CI
 
 on:
-  pull_request:
-    paths-ignore: ['**.md']
-  push:
-    branches: [main]
   workflow_dispatch:
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
 
 jobs:
   # ── GitHub-hosted runners: macOS + Linux ──
@@ -47,6 +39,13 @@ jobs:
       - name: Smoke test
         if: matrix.config == 'ci'
         run: ./build/dev/src/gnuradio4
+      - name: Install (generates SBOM)
+        run: cmake --install build/dev --prefix build/install
+      - name: Upload SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-${{ matrix.os }}-${{ matrix.config }}
+          path: build/install/share/*.spdx
 
   # ── Full profile (main branch only) ──
   full:
@@ -70,6 +69,13 @@ jobs:
         run: cmake --build build/dev
       - name: Smoke test
         run: ./build/dev/src/gnuradio4
+      - name: Install (generates SBOM)
+        run: cmake --install build/dev --prefix build/install
+      - name: Upload SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-full
+          path: build/install/share/*.spdx
 
   # ── Self-hosted Windows (LLVM MinGW, ARM64) ──
   windows:
@@ -83,3 +89,10 @@ jobs:
         env:
           BUILD_CONFIG: sdk
         run: cmake --workflow --preset windows
+      - name: Install (generates SBOM)
+        run: cmake --install build/dev --prefix build/install
+      - name: Upload SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-windows
+          path: build/install/share/*.spdx
