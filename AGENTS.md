@@ -67,6 +67,49 @@ Symbols in `Kconfig`. Build profiles pin `configs/*_defconfig`.
 | `CMakePresets.json` | Preset definitions |
 | `workspace/CMakeLists.txt` | Downstream smoke test |
 | `Brewfile` | macOS system deps |
+| `cmake/sbom.cmake` | SPDX SBOM generator (sodgeit/CMake-SBOM-Builder v0.7.0) |
+
+## SBOM
+
+An SPDX 2.3 SBOM (`*.spdx`) is generated during `cmake --install` via
+[CMake-SBOM-Builder v0.7.0](https://github.com/sodgeit/CMake-SBOM-Builder).
+The SBOM lists all installed SDK files and the enabled runtime dependencies.
+
+### Toggle
+
+Controlled by Kconfig symbol `ENABLE_SBOM` (default `y`).
+
+```sh
+cmake -B build/dev -DCONFIG_ENABLE_SBOM=n   # disable
+```
+
+### How to generate
+
+```sh
+cmake --install build/dev --prefix /tmp/install
+ls /tmp/install/share/gnuradio4-workspace-sbom-*.spdx
+```
+
+### Dependency list (manual)
+
+The runtime dependencies recorded in the SBOM are declared explicitly in
+`CMakeLists.txt` under the `# ---- SBOM: capture installed SDK artifacts` block.
+Each dependency entry must include a SPDX license identifier, version, and
+supplier. The list is manually maintained — update it when adding or removing
+an optional feature that introduces a new runtime dependency.
+
+| Dependency | Kconfig gate | License |
+|-----------|-------------|---------|
+| `cpp-httplib` | `CONFIG_ENABLE_HTTP` | MIT |
+| `SoapySDR` | `CONFIG_ENABLE_SDR` | BSL-1.0 |
+| `nlohmann_json` | `CONFIG_ENABLE_GR4_CONTROL_PLANE` | MIT |
+| `Boost` | `CONFIG_ENABLE_GR4_CONTROL_PLANE` | BSL-1.0 |
+
+### Profiles
+
+`sdk` and `ci` profiles disable HTTP and SDR, so only the SDK files are
+recorded in the SBOM (no dependency packages). The `full` profile enables
+HTTP and control-plane, producing a richer SBOM.
 
 ## Repos
 

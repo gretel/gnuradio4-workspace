@@ -147,6 +147,14 @@ endmenu
 menu "Features"
     depends on ENABLE_GR4_CORE
 
+config ENABLE_SBOM
+    bool "SPDX SBOM generation (cmake --install)"
+    default y
+    help
+        Generates an SPDX 2.3 Software Bill of Materials (SBOM) during
+        cmake --install via CMake-SBOM-Builder (sodgeit/CMake-SBOM-Builder).
+        The SBOM lists installed SDK files and enabled runtime dependencies.
+
 config ENABLE_HTTP
     bool "HTTP / REST API support"
     default y

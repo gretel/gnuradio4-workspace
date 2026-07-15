@@ -35,6 +35,26 @@ if(NOT BUILD_CONFIG)
 endif()
 include(kconfig)
 
+# ---- SBOM generation (SPDX 2.3 via CMake-SBOM-Builder) ----
+if(CONFIG_ENABLE_SBOM)
+    include(cmake/sbom.cmake)
+    if(COMMAND sbom_generate)
+        # Extract version from git tag so the SBOM filename includes a version string.
+        # (This also sets GIT_VERSION/GIT_VERSION_PATH used by sbom_generate defaults.)
+        version_extract()
+
+        sbom_generate(
+            CREATOR ORGANIZATION "GNU Radio 4 Contributors"
+            PACKAGE_NAME "${PROJECT_NAME}"
+            PACKAGE_VERSION "${PROJECT_VERSION}"
+            PACKAGE_LICENSE "MIT"
+            PACKAGE_URL "https://github.com/ghost-in-the-z/gnuradio4-workspace"
+            PACKAGE_NOTES SUMMARY "GNU Radio 4 superbuild SDK"
+            PACKAGE_PURPOSE "LIBRARY" "FRAMEWORK"
+        )
+    endif()
+endif()
+
 # ---- Precompile headers for faster sub-project test compilation ----
 option(GR4_USE_PRECOMPILE_HEADERS
     "Use precompiled headers in sub-project test targets" OFF)
@@ -386,6 +406,53 @@ if("${GR4_INSTALL_PREFIX}" STREQUAL "${CMAKE_BINARY_DIR}/_install")
 else()
     # Explicit GR4_INSTALL_PREFIX — sub-projects already installed to stable path
     message(STATUS "gnuradio4 SDK: installed directly to ${GR4_INSTALL_PREFIX} during build")
+endif()
+
+# ---- SBOM: capture installed SDK artifacts and dependencies ----
+# Only runs during cmake --install. The add_directory calls are configure-time
+# registration; the actual scanning and SPDX generation happens at install time.
+# sbom_finalize() is placed AFTER the install(DIRECTORY ...) block so that its
+# install scripts execute after the SDK files are copied into the final prefix.
+if(CONFIG_ENABLE_SBOM AND DEFINED SBOM_FILENAME)
+    # Recursively capture installed SDK directories
+    sbom_add_directory("include" FILETYPE "SOURCE")
+    sbom_add_directory("lib"     FILETYPE "BINARY")
+    sbom_add_directory("share"   FILETYPE "DOCUMENTATION" "OTHER")
+    sbom_add_directory("bin"     FILETYPE "BINARY" OPTIONAL)
+
+    # Conditional runtime dependencies
+    if(CONFIG_ENABLE_HTTP AND DEFINED httplib_DIR)
+        sbom_add_package(cpp-httplib
+            VERSION "0.18.0"
+            LICENSE "MIT"
+            SUPPLIER ORGANIZATION "Yuji Hirose"
+        )
+    endif()
+    if(CONFIG_ENABLE_SDR AND SoapySDR_FOUND)
+        sbom_add_package(SoapySDR
+            VERSION "${SoapySDR_VERSION}"
+            LICENSE "BSL-1.0"
+            SUPPLIER ORGANIZATION "Pothosware"
+        )
+    endif()
+    if(CONFIG_ENABLE_GR4_CONTROL_PLANE)
+        if(nlohmann_json_FOUND AND DEFINED nlohmann_json_VERSION)
+            sbom_add_package(nlohmann_json
+                VERSION "${nlohmann_json_VERSION}"
+                LICENSE "MIT"
+                SUPPLIER ORGANIZATION "Niels Lohmann"
+            )
+        endif()
+        if(Boost_FOUND AND DEFINED Boost_VERSION)
+            sbom_add_package(Boost
+                VERSION "${Boost_VERSION}"
+                LICENSE "BSL-1.0"
+                SUPPLIER ORGANIZATION "Boost Foundation"
+            )
+        endif()
+    endif()
+
+    sbom_finalize()
 endif()
 
 # ---- Custom ExternalProject repo (from Kconfig) ----
