@@ -96,10 +96,9 @@ config GR4_CORE_REPO_URL
 
 config GR4_CORE_GIT_TAG
     string "gnuradio4-core git ref"
-    default "interim/windows-test"
+    default "main"
     help
         Git ref (branch/tag/commit) for gnuradio4-core.
-        Use "main" for upstream, "interim/windows-test" for gretel fork.
 
 config GR4_LIBRARY_REPO_URL
     string "gnuradio4-library git URL"
