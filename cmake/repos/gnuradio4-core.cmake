@@ -39,7 +39,7 @@ if(CONFIG_ENABLE_GR4_CORE)
         # flags as its own -W flags. Strip CXX_FLAGS_INIT to avoid this.
         list(FILTER _ep_core_args EXCLUDE REGEX "CMAKE_CXX_FLAGS_INIT")
     endif()
-    # Add CONTEXT_KEY alias to Tag.hpp (workaround for gnuradio4-library #
+# Add CONTEXT_KEY alias to Tag.hpp (workaround for gnuradio4-library #
     # having renamed CONTEXT→CONTEXT_KEY while core main still has CONTEXT).
     gr4_ep(gnuradio4-core
         GIT_URL "${CONFIG_GR4_CORE_REPO_URL}"

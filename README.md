@@ -96,6 +96,16 @@ Changes are written to `build/dev/.config` and persist across rebuilds. To switc
 
 For full control, edit `build/dev/.config` directly and re-run `cmake -B build/dev`, or create your own defconfig file and pass it with `-DBUILD_CONFIG=custom`.
 
+> **Windows notes**
+> - Install prerequisites with `winget` (see below).
+> - Block registry and plugins are disabled by default in the `windows` preset
+>   (sdk/ci profiles). The `dlopen`-based plugin loader now works on Windows
+>   via [dlfcn-win32](https://github.com/dlfcn-win32/dlfcn-win32); enable with
+>   `CONFIG_ENABLE_BLOCK_REGISTRY=y` / `CONFIG_ENABLE_BLOCK_PLUGINS=y`.
+> - The `full` build profile is no longer blocked by the plugin-loader issue,
+>   but other profile features (SDR, control-plane) remain experimental on Windows.
+> - Known test issues on Windows: `qa_Tags` (`CONTEXT` identifier collision with `winnt.h`), `qa_thread_affinity` (POSIX `SCHED_*` constants not available). These are guarded at compile time.
+
 ## Quick reference
 
 For a guided overview of presets and build profiles, see [Configuration](#configuration).

@@ -14,7 +14,9 @@ ctest --test-dir build/dev/workspace --output-on-failure
 |----------|--------|-----------|-------|
 | macOS | `macos` | Homebrew LLVM (brew bundle) | `xcrun` needs Xcode CLT |
 | Linux | `linux` | system gcc-14+ / clang-20+ | C++23 required |
-| Windows | `windows` | LLVM MinGW clang++ | Block registry OFF by default; `full` profile unsupported |
+| Windows | `windows` | LLVM MinGW clang++ | Block registry OFF by default (enable with CONFIG_ENABLE_BLOCK_REGISTRY=y); `full` profile now supported |
+| Cross armv7 | `cross_armv7` | Bootlin armv7-eabihf | PlutoSDR / FISH Ball |
+| Cross aarch64 | `cross_aarch64` | Bootlin aarch64 | Raspberry Pi 4/5 |
 
 ## Profiles
 
@@ -158,7 +160,7 @@ macOS ld64 rescans by default. Linux needs `LINK_GROUP:RESCAN` for `gnuradio-blo
 - No `-ldl` → `CMAKE_DL_LIBS=""` or cmake adds it anyway → create empty `libdl.a` stub via `llvm-ar rcs`
 - `cpp-httplib` not always available → httplib-stub in CMakeLists.txt provides dummy target
 - `thread_affinity.hpp`: `native_handle()` returns `void*` not `pthread_t` → guarded with `!defined(__MINGW32__)`
-- Block registry disabled by default (plugin loader uses dlopen, not available on Windows/MinGW). `full` profile unsupported.
+- Block registry disabled by default; the `dlopen`-based plugin loader now works on Windows via [dlfcn-win32](https://github.com/dlfcn-win32/dlfcn-win32). Enable with `CONFIG_ENABLE_BLOCK_REGISTRY=y CONFIG_ENABLE_BLOCK_PLUGINS=y`. The `full` build profile is now supported on Windows.
 - `gr::tag::CONTEXT` renamed to `gr::tag::CONTEXT_KEY` to avoid collision with `winnt.h`'s `CONTEXT` typedef
 - `qa_thread_affinity`: POSIX `SCHED_*` tests guarded with `not defined(_WIN32)`
 - `BlockRegistry.hpp`: dllexport redeclaration warning suppressed with `-Wdll-attribute-on-redeclaration` pragma (MinGW+Clang only)
