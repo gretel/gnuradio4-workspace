@@ -13,6 +13,7 @@
 |----|--------|------|-------------|---------|
 | 3 | `interim/windows-test` | `gnuradio/gnuradio4-core main` | Windows/MinGW build support. Rename `CONTEXT`→`CONTEXT_KEY` to avoid `winnt.h` collision. Suppress `-Wdll-attribute-on-redeclaration`. Fix `qa_thread_affinity` SCHED\_\* values for Windows. Make `qa_SubGraphAssets` conditional on `httplib.h`. | 6 |
 | 4 | `pr/pch-unity-build` | `interim/windows-test` | PCH support for test targets. Same pattern as blocks. | 1 |
+| 12 | `pr/pluginloader-windows-core` | `interim/windows-test` | Port PluginLoader to Windows/MinGW via dlfcn-win32 v1.4.2 (MIT). FetchContent downloads the library; dlfcn.c compiled as a static `dl` target and linked into `gnuradio-core`. Guard `<dlfcn.h>` in `Plugin.hpp` with `INTERNAL_ENABLE_BLOCK_PLUGINS`. Use `generic_string()` for plugin paths. Add `qa_plugin` test fixture and `qa_PluginLoader` test (block/scheduler discovery, instantiation, bad-plugin rejection). CMake 4.x compat: `dl` target include dirs PRIVATE, dlfcn.c compiled as part of `gnuradio-core` sources. | 5 |
 
 ## gnuradio4-library
 
@@ -47,3 +48,4 @@ Target: `gnuradio/gnuradio4-workspace` (does not exist yet — author is ready t
 |----|--------|-------------|---------|
 | 10 | `pr/kconfig-repo-urls` | Kconfig menu "Repository sources" with per-repo git URL + tag symbols. `gr4_ep` macro extended with `GIT_URL`/`GIT_TAG` kwargs. `cmake/repos/gr4-studio.cmake` added. Hardcoded `gretel`/`gnuradio` owner strings removed. | 4 |
 | 11 | `pr/pch-unity-build` | Propagate `GR4_USE_PRECOMPILE_HEADERS` to sub-projects. Fix `httplib_DIR` unconditional propagation. | 1 |
+| 13 | `pr/pluginloader-windows` | `pr/pluginloader-windows-core` core pin. Remove Windows plugin-loader fatal error and empty `libdl.a` stub. Windows preset: enable block registry + plugins + testing. Add minimal workspace test plugin (`gr4-test-plugin`) extend diagnostic binary to accept optional plugin directory and load via `gr::PluginLoader`. CMake 4.x compat patch for the `dl` target. Tested on aarch64 MinGW: `gnuradio4.exe` loads plugin and lists `gr4_workspace::TestBlock`. | 2 |
