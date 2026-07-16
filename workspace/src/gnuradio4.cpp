@@ -7,6 +7,7 @@
 #include <vector>
 
 #include <gnuradio-4.0/BlockRegistry.hpp>
+#include <gnuradio-4.0/PluginLoader.hpp>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -63,10 +64,16 @@ constexpr const char* arch_name() {
 
 } // namespace
 
-int main() {
+int main(int argc, char* argv[]) {
 #ifdef _WIN32
     SetConsoleOutputCP(CP_UTF8);
 #endif
+
+    // Optional positional argument: plugin directory path
+    std::string pluginDir;
+    if (argc > 1) {
+        pluginDir = argv[1];
+    }
 
     std::cout << '\n';
     std::cout << "  ▄▖▖ ▖▖▖▄▖   ▌▘  ▖▖ " << WORKSPACE_VERSION << "-" << GIT_REV << '\n';
@@ -74,9 +81,21 @@ int main() {
     std::cout << "  ▙▌▌▝▌▙▌▌▌█▌▙▌▌▙▌ ▌ " << compiler_id << '\n';
     std::cout << '\n';
 
-    // ---- Block registry listing ----
-    const auto& blockRegistry = gr::globalBlockRegistry();
-    auto        blockNames    = blockRegistry.keys();
+    // ---- Block registry / plugin loader listing ----
+    std::vector<std::string> blockNames;
+
+    if (!pluginDir.empty()) {
+        gr::PluginLoader loader(gr::globalBlockRegistry(), gr::globalSchedulerRegistry(), std::vector<std::string>{pluginDir});
+        blockNames = loader.availableBlocks();
+        // Report any failed plugins
+        for (const auto& [file, status] : loader.failedPlugins()) {
+            std::cout << "  [failed] " << file << ": " << status << '\n';
+        }
+    } else {
+        const auto& blockRegistry = gr::globalBlockRegistry();
+        blockNames                = blockRegistry.keys();
+    }
+
     std::sort(blockNames.begin(), blockNames.end());
     auto last = std::unique(blockNames.begin(), blockNames.end());
     blockNames.erase(last, blockNames.end());

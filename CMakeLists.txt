@@ -60,13 +60,6 @@ option(GR4_USE_PRECOMPILE_HEADERS
     "Use precompiled headers in sub-project test targets" OFF)
 mark_as_advanced(GR4_USE_PRECOMPILE_HEADERS)
 
-# ---- Windows: block plugins use dlopen — not yet ported to LoadLibrary ----
-if(WIN32 AND CONFIG_ENABLE_BLOCK_PLUGINS)
-    message(FATAL_ERROR "BUILD_CONFIG=full / CONFIG_ENABLE_BLOCK_PLUGINS is not supported on Windows yet. "
-        "PluginLoader uses dlopen which is not available on Windows/MinGW. "
-        "Use BUILD_CONFIG=sdk or ci, or override CONFIG_ENABLE_BLOCK_PLUGINS=n.")
-endif()
-
 # ---- Git revision (updated at build time) ----
 execute_process(
     COMMAND git rev-parse --short HEAD
@@ -142,23 +135,7 @@ if(WIN32 OR MINGW)
     list(APPEND _ep_common_args -DCMAKE_DL_LIBS="")
 endif()
 
-# MinGW: create empty libdl.a stub if llvm-ar is available.
-# MinGW platform defaults add -ldl to every link target; setting
-# CMAKE_DL_LIBS="" is not always sufficient for shared library targets.
-if(WIN32 OR MINGW)
-    find_program(_llvm_ar llvm-ar)
-    if(_llvm_ar)
-        get_filename_component(_mingw_lib "${CMAKE_CXX_COMPILER}" DIRECTORY)
-        get_filename_component(_mingw_lib "${_mingw_lib}" DIRECTORY)
-        set(_dl_stub "${_mingw_lib}/libdl.a")
-        if(NOT EXISTS "${_dl_stub}")
-            execute_process(COMMAND ${_llvm_ar} rcs "${_dl_stub}")
-            message(STATUS "Created MinGW libdl.a stub: ${_dl_stub}")
-        endif()
-        unset(_dl_stub)
-    endif()
-    unset(_llvm_ar)
-endif()
+
 
 # ---- Stub for cpp-httplib (conditional on HTTP being disabled) ----
 # Upstream gnuradio4-core and gnuradio4-library unconditionally require

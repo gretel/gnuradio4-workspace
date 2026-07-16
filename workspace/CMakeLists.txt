@@ -79,6 +79,27 @@ if(TARGET gnuradio4::GrBasicBlocksShared)
     target_link_libraries(gnuradio4 PRIVATE gnuradio4::GrBasicBlocksShared)
 endif()
 
+# ---- Optional: plugin support (when core built with INTERNAL_ENABLE_BLOCK_PLUGINS) ----
+if(TARGET gnuradio4::gnuradio-plugin)
+    message(STATUS "workspace: gnuradio-plugin found, linking into diagnostic binary")
+    target_link_libraries(gnuradio4 PRIVATE gnuradio4::gnuradio-plugin)
+    target_compile_definitions(gnuradio4 PRIVATE HAVE_GNURADIO4_PLUGIN)
+endif()
+
 # ---- Smoke test ----
 enable_testing()
 add_test(NAME gnuradio4-smoke COMMAND gnuradio4)
+
+# ---- Workspace test plugin (built only when gnuradio-plugin target is available) ----
+if(TARGET gnuradio4::gnuradio-plugin)
+    add_library(gr4-test-plugin MODULE src/plugin.cpp)
+    target_link_libraries(gr4-test-plugin PRIVATE gnuradio-core gnuradio-options gnuradio4::gnuradio-plugin)
+
+    # Register a test that runs the diagnostic binary with the plugin directory
+    add_test(NAME gnuradio4-plugin-test
+        COMMAND gnuradio4 "$<TARGET_FILE_DIR:gr4-test-plugin>"
+    )
+    set_tests_properties(gnuradio4-plugin-test PROPERTIES
+        ENVIRONMENT "PATH=$<TARGET_FILE_DIR:gr4-test-plugin>;$ENV{PATH}"
+    )
+endif()

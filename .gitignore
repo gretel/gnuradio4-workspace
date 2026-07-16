@@ -84,6 +84,7 @@ tests/
 buildcfg.log
 
 # ---- Local checkouts for ExternalProject override ----
+.worktrees/
 gnuradio4-core/
 gnuradio4-algorithm/
 gnuradio4-blocks/
