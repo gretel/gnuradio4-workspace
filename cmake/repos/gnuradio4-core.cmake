@@ -37,15 +37,19 @@ if(CONFIG_ENABLE_GR4_CORE)
         # cmake 4.x on MinGW: CMAKE_CXX_FLAGS_INIT with -Wno-error=* flags causes
         # "The warning category is not known" error because cmake parses -Wno-error
         # flags as its own -W flags. Strip CXX_FLAGS_INIT to avoid this.
-        list(FILTER _ep_core_args EXCLUDE REGEX "CMAKE_CXX_FLAGS_INIT")
+list(FILTER _ep_core_args EXCLUDE REGEX "CMAKE_CXX_FLAGS_INIT")
+        # CMP0154=OLD: allow source-prefixed include dirs (needed by dlfcn-win32 dl target)
+        list(APPEND _ep_core_args -DCMAKE_POLICY_DEFAULT_CMP0154=OLD)
     endif()
 # Add CONTEXT_KEY alias to Tag.hpp (workaround for gnuradio4-library #
     # having renamed CONTEXT→CONTEXT_KEY while core main still has CONTEXT).
     gr4_ep(gnuradio4-core
-        GIT_URL "${CONFIG_GR4_CORE_REPO_URL}"
+GIT_URL "${CONFIG_GR4_CORE_REPO_URL}"
         GIT_TAG "${CONFIG_GR4_CORE_GIT_TAG}"
         CMAKE_ARGS ${_ep_core_args}
         PATCH_COMMAND grep -q CONTEXT_KEY core/include/gnuradio-4.0/Tag.hpp
             || patch -p1 -i "${CMAKE_CURRENT_SOURCE_DIR}/patches/core-context-key.patch"
+        COMMAND ${CMAKE_COMMAND} -DCMAKE_CURRENT_SOURCE_DIR=<SOURCE_DIR>
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/patches/fix-dl-public-include.cmake"
     )
 endif()

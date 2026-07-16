@@ -51,10 +51,13 @@
       "cacheVariables": {
         "CMAKE_CXX_COMPILER": "clang++",
         "CMAKE_C_COMPILER": "clang",
-        "CONFIG_USE_FETCHCONTENT": "y",
+        "CONFIG_USE_FETCHCONTENT": "n",
         "CONFIG_ENABLE_HTTP": "n",
-        "CONFIG_ENABLE_BLOCK_REGISTRY": "n",
-        "CONFIG_ENABLE_BLOCK_PLUGINS": "n",
+        "CONFIG_ENABLE_BLOCK_REGISTRY": "y",
+        "CONFIG_ENABLE_BLOCK_PLUGINS": "y",
+        "CONFIG_ENABLE_TESTING": "n",
+        "CONFIG_ENABLE_GR4_ALGORITHM": "n",
+        "CONFIG_ENABLE_GR4_BLOCKS": "n",
         "CONFIG_WARNINGS_AS_ERRORS": "n"
       }
     }
