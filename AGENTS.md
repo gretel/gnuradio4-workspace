@@ -17,9 +17,27 @@ cmake --preset dev
 cmake --build build/dev
 ```
 
+For faster rebuilds, raise the ccache cache cap (default 5 GiB):
+
+```sh
+ccache --set-config max_size=30G
+```
+
+The `macos` preset passes `GR4_USE_PRECOMPILE_HEADERS=ON` to sub-projects.
+This flag is a clean no-op until sub-projects implement `target_precompile_headers`
+(pending `pr/pch-unity-build` PRs).
+
+To profile which translation units consume the most compile time (for tuning PCH headers):
+
+```sh
+cmake --preset macos -DCONFIG_TIMETRACE=y
+cmake --build build/dev
+# Then view *.json files in build/dev/_deps/*/src/*/ with chrome://tracing or speedscope.app
+```
+
 | Platform | Preset | Toolchain | Notes |
 |----------|--------|-----------|-------|
-| macOS | `macos` | Homebrew LLVM (brew bundle) | `xcrun` needs Xcode CLT |
+| macOS | `macos` | Homebrew LLVM (brew bundle) | `xcrun` needs Xcode CLT; `GR4_USE_PRECOMPILE_HEADERS=ON` (no-op until sub-projects implement it) |
 | Linux | `linux` | system gcc-14+ / clang-20+ | C++23 required |
 | Windows | `windows` | LLVM MinGW clang++ | Block registry OFF by default (enable with CONFIG_ENABLE_BLOCK_REGISTRY=y); `full` profile now supported |
 | Cross armv7 | `cross_armv7` | Bootlin armv7-eabihf | PlutoSDR / FISH Ball |

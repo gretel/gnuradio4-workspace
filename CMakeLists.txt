@@ -114,6 +114,7 @@ if(CONFIG_ENABLE_INSTRUMENTATION)
 endif()
 
 # ---- Precompile headers for faster sub-project test compilation ----
+# NOTE: no-op until sub-projects implement target_precompile_headers.
 option(GR4_USE_PRECOMPILE_HEADERS
     "Use precompiled headers in sub-project test targets" OFF)
 mark_as_advanced(GR4_USE_PRECOMPILE_HEADERS)

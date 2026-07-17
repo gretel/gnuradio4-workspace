@@ -28,6 +28,9 @@
       "inherits": "base",
       "binaryDir": "${sourceDir}/build/dev",
       "toolchainFile": "${sourceDir}/cmake/toolchain-macos-homebrew-llvm.cmake",
+      "cacheVariables": {
+        "GR4_USE_PRECOMPILE_HEADERS": "ON"
+      },
       "condition": {
         "type": "equals",
         "lhs": "${hostSystemName}",
