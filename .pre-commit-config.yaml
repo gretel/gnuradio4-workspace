@@ -24,7 +24,7 @@ repos:
 
   # --- Python ---
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.20
+    rev: v0.15.22
     hooks:
       - id: ruff
         args: ['--fix', '--exit-non-zero-on-fix']
@@ -39,11 +39,13 @@ repos:
         exclude: '^scripts/kconfig/'
 
   # --- C++ ---
-  # Pinned to v18.1.8 to match CI (brew llvm ships v22 but format differs).
-  - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: v18.1.8
+  # clang-format via Python wheels — no system LLVM install needed.
+  # Pin clang version to 18 to match CI (brew llvm ships v22 but format differs).
+  - repo: https://github.com/cpp-linter/cpp-linter-hooks
+    rev: v1.6.0
     hooks:
       - id: clang-format
+        args: [--style=file, --version=18]
         types_or: [c++, c]
 
   # --- CMake ---
@@ -61,6 +63,16 @@ repos:
             cmake/sbom\.cmake|
             scripts/kconfig/.*
           )$
+
+  # --- C++ static analysis (system tool) ---
+  - repo: local
+    hooks:
+      - id: cppcheck
+        name: cppcheck
+        entry: cppcheck
+        language: system
+        types_or: [c, c++]
+        args: [--quiet, --error-exitcode=1, --enable=all, --suppress=unmatchedSuppression, --suppress=missingIncludeSystem, --suppress=unusedFunction, --suppress=constParameter, --suppress=unknownMacro, --suppress=checkersReport]
 
   # --- GitHub Actions ---
   - repo: https://github.com/rhysd/actionlint
