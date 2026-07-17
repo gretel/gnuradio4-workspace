@@ -76,6 +76,9 @@ dist/
 .plans/
 imgui.ini
 
+# ---- Git worktrees (managed by git worktree, not committed) ----
+.worktrees/
+
 # ---- Temp / stale ----
 tmp/
 *.log
