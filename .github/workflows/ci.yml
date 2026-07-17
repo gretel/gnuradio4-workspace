@@ -42,7 +42,7 @@ jobs:
         run: cmake --build build/dev
       - name: Smoke test
         if: matrix.config == 'ci'
-        run: ./build/dev/src/gnuradio4
+        run: ./build/dev/workspace/src/gnuradio4
       - name: Install (generates SBOM)
         run: cmake --install build/dev --prefix build/install
       - name: Pack SDK
@@ -86,7 +86,7 @@ jobs:
       - name: Build
         run: cmake --build build/dev
       - name: Smoke test
-        run: ./build/dev/src/gnuradio4
+        run: ./build/dev/workspace/src/gnuradio4
       - name: Install (generates SBOM)
         run: cmake --install build/dev --prefix build/install
       - name: Pack SDK

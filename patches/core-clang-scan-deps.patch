@@ -1,0 +1,22 @@
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -288,14 +288,17 @@
+ )
+ message(STATUS "Is plugin system enabled? ${INTERNAL_ENABLE_BLOCK_PLUGINS}")
+
+-# clang-scan-deps in required by ccache
++# clang-scan-deps is required by ccache
+ if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
+   string(
+     REGEX MATCH
+           "^[0-9]+"
+           CLANG_MAJOR
+           "${CMAKE_CXX_COMPILER_VERSION}")
+-  find_program(CLANG_SCAN_DEPS_EXEC NAMES clang-scan-deps-${CLANG_MAJOR} clang-scan-deps)
++  get_filename_component(_core_scan_deps_hint "${CMAKE_CXX_COMPILER}" DIRECTORY)
++  find_program(CLANG_SCAN_DEPS_EXEC NAMES clang-scan-deps-${CLANG_MAJOR} clang-scan-deps
++    HINTS "${_core_scan_deps_hint}")
++  unset(_core_scan_deps_hint)
+   if(CLANG_SCAN_DEPS_EXEC)
+     set(CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS
+         "${CLANG_SCAN_DEPS_EXEC}"

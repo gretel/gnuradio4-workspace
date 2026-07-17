@@ -51,5 +51,7 @@ GIT_URL "${CONFIG_GR4_CORE_REPO_URL}"
             || patch -p1 -i "${CMAKE_CURRENT_SOURCE_DIR}/patches/core-context-key.patch"
         COMMAND ${CMAKE_COMMAND} -DCMAKE_CURRENT_SOURCE_DIR=<SOURCE_DIR>
             -P "${CMAKE_CURRENT_SOURCE_DIR}/patches/fix-dl-public-include.cmake"
+        COMMAND grep -q "clang-scan-deps is required by ccache" CMakeLists.txt
+            || patch -p1 -i "${CMAKE_CURRENT_SOURCE_DIR}/patches/core-clang-scan-deps.patch"
     )
 endif()

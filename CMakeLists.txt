@@ -72,7 +72,7 @@ if(CONFIG_ENABLE_SBOM)
             PACKAGE_NAME "${PROJECT_NAME}"
             PACKAGE_VERSION "${PROJECT_VERSION}"
             PACKAGE_LICENSE "MIT"
-            PACKAGE_URL "https://github.com/ghost-in-the-z/gnuradio4-workspace"
+            PACKAGE_URL "https://github.com/gretel/gnuradio4-workspace"
             PACKAGE_NOTES SUMMARY "GNU Radio 4 superbuild SDK"
                          DESC "${_sbom_config}"
             PACKAGE_PURPOSE "LIBRARY" "FRAMEWORK"
@@ -178,7 +178,6 @@ set(_ep_common_args
     -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
     -DCMAKE_PREFIX_PATH=${_install_prefix}
     -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-    -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
     -DCMAKE_CXX_STANDARD=23
     -DCMAKE_CXX_STANDARD_REQUIRED=ON
     -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE
@@ -192,6 +191,9 @@ if(CMAKE_TOOLCHAIN_FILE)
     list(APPEND _ep_common_args -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
     # C compiler needed for cross-compilation; on native builds sub-projects auto-detect
     list(APPEND _ep_common_args -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER})
+else()
+    # No toolchain: forward compiler explicitly so sub-builds don't pick a stray system one
+    list(APPEND _ep_common_args -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER})
 endif()
 # Propagate compiler extension setting to sub-projects
 # Default OFF (standard C++23 only); CONFIG_CXX_EXTENSIONS=y flips to ON.
@@ -209,6 +211,29 @@ if(WIN32 OR MINGW)
     list(APPEND _ep_common_args -DCMAKE_DL_LIBS="")
 endif()
 
+# ---- Forward clang-scan-deps to sub-projects (avoids false warning) ----
+# gnuradio4-core runs its own find_program(CLANG_SCAN_DEPS_EXEC ...)
+# which can fail in the subproject configure environment even though
+# CMake's compiler detection already discovered the scanner binary.
+# Pre-populating the cache entry silences the spurious WARNING.
+if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
+    get_filename_component(_gr4_compiler_bin "${CMAKE_CXX_COMPILER}" DIRECTORY)
+    get_filename_component(_gr4_compiler_prefix "${_gr4_compiler_bin}" DIRECTORY)
+    find_program(_GR4_CLANG_SCAN_DEPS NAMES clang-scan-deps
+        HINTS "${_gr4_compiler_bin}" "${_gr4_compiler_prefix}/bin" "/opt/homebrew/bin"
+        NO_DEFAULT_PATH)
+    if(NOT _GR4_CLANG_SCAN_DEPS)
+        find_program(_GR4_CLANG_SCAN_DEPS NAMES clang-scan-deps)
+    endif()
+    if(_GR4_CLANG_SCAN_DEPS)
+        message(STATUS "clang-scan-deps: ${_GR4_CLANG_SCAN_DEPS}")
+        list(APPEND _ep_common_args "-DCLANG_SCAN_DEPS_EXEC:FILEPATH=${_GR4_CLANG_SCAN_DEPS}")
+        list(APPEND _ep_common_args "-DCMAKE_CXX_COMPILER_CLANG_SCAN_DEPS:FILEPATH=${_GR4_CLANG_SCAN_DEPS}")
+    endif()
+    unset(_gr4_compiler_bin)
+    unset(_gr4_compiler_prefix)
+    unset(_GR4_CLANG_SCAN_DEPS)
+endif()
 
 
 # ---- Stub for cpp-httplib (conditional on HTTP being disabled) ----
@@ -587,7 +612,8 @@ if(CUSTOM_EP_ENABLE AND DEFINED CUSTOM_EP_URL AND NOT "${CUSTOM_EP_URL}" STREQUA
         DEPENDS ${_custom_depends}
         EXCLUDE_FROM_ALL TRUE
     )
-    unset(_custom_name _custom_depends)
+    unset(_custom_name)
+    unset(_custom_depends)
 endif()
 
 # ---- update-deps: refresh fetched ExternalProject repos ----
