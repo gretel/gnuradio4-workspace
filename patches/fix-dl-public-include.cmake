@@ -16,7 +16,17 @@ string(REPLACE
 # Instead, modify core/CMakeLists.txt to include dlfcn.c in gnuradio-core sources.
 file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists.txt" "${_top}")
 
-# Fix 3: Add dlfcn.c to gnuradio-core sources in core/CMakeLists.txt
+# Fix 3: Ensure dlfcn-win32 directory exists (missing on macOS/Linux)
+set(_dl_dir "${CMAKE_CURRENT_SOURCE_DIR}/third_party/dlfcn-win32")
+if(NOT EXISTS "${_dl_dir}")
+    file(MAKE_DIRECTORY "${_dl_dir}")
+    # On non-Windows systems dlfcn.h is provided by libc, so an empty stub suffices.
+    file(WRITE "${_dl_dir}/dlfcn.c" "// Stub — system dlfcn.h used instead\n")
+    message(STATUS "dlfcn-win32: created stub (non-Windows)")
+endif()
+unset(_dl_dir)
+
+# Fix 4: Add dlfcn.c to gnuradio-core sources in core/CMakeLists.txt
 file(READ "${CMAKE_CURRENT_SOURCE_DIR}/core/CMakeLists.txt" _core)
 string(REPLACE
   "src/PluginLoader.cpp"

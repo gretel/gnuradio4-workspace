@@ -84,7 +84,10 @@ endif()
 if(TARGET gnuradio4::gnuradio-plugin)
     message(STATUS "workspace: gnuradio-plugin found, linking into diagnostic binary")
     target_link_libraries(gnuradio4 PRIVATE gnuradio4::gnuradio-plugin)
-    target_compile_definitions(gnuradio4 PRIVATE HAVE_GNURADIO4_PLUGIN)
+    # PluginLoader.hpp guards the real PluginLoader class behind INTERNAL_ENABLE_BLOCK_PLUGINS
+    target_compile_definitions(gnuradio4 PRIVATE
+        HAVE_GNURADIO4_PLUGIN
+        INTERNAL_ENABLE_BLOCK_PLUGINS)
 endif()
 
 # ---- Smoke tests ----
@@ -101,6 +104,6 @@ if(TARGET gnuradio4::gnuradio-plugin)
         COMMAND gnuradio4 "$<TARGET_FILE_DIR:gr4-test-plugin>"
     )
     set_tests_properties(gnuradio4-plugin-test PROPERTIES
-        ENVIRONMENT "PATH=$<TARGET_FILE_DIR:gr4-test-plugin>;$<INSTALL_PREFIX>/bin;%PATH%"
+        ENVIRONMENT "PATH=$<TARGET_FILE_DIR:gr4-test-plugin>;${CMAKE_INSTALL_PREFIX}/bin;%PATH%"
     )
 endif()
