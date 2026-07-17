@@ -252,6 +252,7 @@ This repository incorporates vendored code from the following projects:
 |---------|-------|---------|
 | [cmake-kconfig](https://github.com/jameswalmsley/cmake-kconfig) (adapted from Zephyr RTOS) | `cmake/kconfig.cmake`, `cmake/extensions.cmake`, `cmake/python.cmake`, `scripts/kconfig/kconfig.py`, `scripts/kconfig/menuconfig.py` | Apache-2.0 |
 | [Kconfiglib](https://github.com/ulfalizer/Kconfiglib) | `scripts/kconfig/kconfiglib.py` | ISC |
+| [CMake-SBOM-Builder](https://github.com/sodgeit/CMake-SBOM-Builder) v0.7.0 | `cmake/sbom.cmake` | MIT |
 
 ## License
 

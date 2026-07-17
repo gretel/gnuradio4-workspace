@@ -39,9 +39,21 @@ include(kconfig)
 if(CONFIG_ENABLE_SBOM)
     include(cmake/sbom.cmake)
     if(COMMAND sbom_generate)
-        # Extract version from git tag so the SBOM filename includes a version string.
-        # (This also sets GIT_VERSION/GIT_VERSION_PATH used by sbom_generate defaults.)
-        version_extract()
+        # Build a config summary for the SBOM PackageDescription
+        set(_sbom_config "BUILD_CONFIG=${BUILD_CONFIG}")
+        foreach(sym IN ITEMS
+            CONFIG_ENABLE_TESTING      CONFIG_ENABLE_HTTP
+            CONFIG_ENABLE_SDR          CONFIG_ENABLE_AUDIO
+            CONFIG_ENABLE_GR4_CONTROL_PLANE CONFIG_ENABLE_BLOCK_REGISTRY
+            CONFIG_ENABLE_BLOCK_PLUGINS     CONFIG_ENABLE_TBB
+            CONFIG_ENABLE_COVERAGE     CONFIG_WARNINGS_AS_ERRORS
+            CONFIG_ENABLE_SBOM         CONFIG_ENABLE_GR4_CORE
+            CONFIG_ENABLE_GR4_ALGORITHM     CONFIG_ENABLE_GR4_BLOCKS
+        )
+            if(DEFINED ${sym})
+                string(APPEND _sbom_config " | ${sym}=${${sym}}")
+            endif()
+        endforeach()
 
         sbom_generate(
             CREATOR ORGANIZATION "GNU Radio 4 Contributors"
@@ -50,8 +62,10 @@ if(CONFIG_ENABLE_SBOM)
             PACKAGE_LICENSE "MIT"
             PACKAGE_URL "https://github.com/ghost-in-the-z/gnuradio4-workspace"
             PACKAGE_NOTES SUMMARY "GNU Radio 4 superbuild SDK"
+                         DESC "${_sbom_config}"
             PACKAGE_PURPOSE "LIBRARY" "FRAMEWORK"
         )
+        unset(_sbom_config)
     endif()
 endif()
 
@@ -419,6 +433,63 @@ if(CONFIG_ENABLE_SBOM AND DEFINED SBOM_FILENAME)
     sbom_add_directory("lib"     FILETYPE "BINARY")
     sbom_add_directory("share"   FILETYPE "DOCUMENTATION" "OTHER")
     sbom_add_directory("bin"     FILETYPE "BINARY" OPTIONAL)
+
+    # ExternalProject component repos
+    if(CONFIG_ENABLE_GR4_CORE)
+        sbom_add_package(gnuradio4-core
+            VERSION "${CONFIG_GR4_CORE_GIT_TAG}"
+            LICENSE "MIT"
+            SUPPLIER ORGANIZATION "GNU Radio 4 Contributors"
+            URL "${CONFIG_GR4_CORE_REPO_URL}"
+            DOWNLOAD "${CONFIG_GR4_CORE_REPO_URL}"
+            NOTES SUMMARY "Runtime, scheduler, blocklib"
+            PURPOSE "LIBRARY"
+        )
+    endif()
+    if(CONFIG_ENABLE_GR4_ALGORITHM)
+        sbom_add_package(gnuradio4-algorithm
+            VERSION "${CONFIG_GR4_LIBRARY_GIT_TAG}"
+            LICENSE "MIT"
+            SUPPLIER ORGANIZATION "GNU Radio 4 Contributors"
+            URL "${CONFIG_GR4_LIBRARY_REPO_URL}"
+            DOWNLOAD "${CONFIG_GR4_LIBRARY_REPO_URL}"
+            NOTES SUMMARY "DSP / algorithm library"
+            PURPOSE "LIBRARY"
+        )
+    endif()
+    if(CONFIG_ENABLE_GR4_BLOCKS)
+        sbom_add_package(gnuradio4-blocks
+            VERSION "${CONFIG_GR4_BLOCKS_GIT_TAG}"
+            LICENSE "MIT"
+            SUPPLIER ORGANIZATION "GNU Radio 4 Contributors"
+            URL "${CONFIG_GR4_BLOCKS_REPO_URL}"
+            DOWNLOAD "${CONFIG_GR4_BLOCKS_REPO_URL}"
+            NOTES SUMMARY "Standard blocks (audio, SDR, HTTP)"
+            PURPOSE "LIBRARY"
+        )
+    endif()
+    if(CONFIG_ENABLE_GR4_CONTROL_PLANE)
+        sbom_add_package(gr4-control-plane
+            VERSION "${CONFIG_GR4_CONTROL_PLANE_GIT_TAG}"
+            LICENSE "MIT"
+            SUPPLIER ORGANIZATION "GNU Radio 4 Contributors"
+            URL "${CONFIG_GR4_CONTROL_PLANE_REPO_URL}"
+            DOWNLOAD "${CONFIG_GR4_CONTROL_PLANE_REPO_URL}"
+            NOTES SUMMARY "REST API, WebSocket, plugin registry"
+            PURPOSE "LIBRARY"
+        )
+    endif()
+    if(CONFIG_ENABLE_GR4_INCUBATOR)
+        sbom_add_package(gr4-incubator
+            VERSION "${CONFIG_GR4_INCUBATOR_GIT_TAG}"
+            LICENSE "MIT"
+            SUPPLIER ORGANIZATION "GNU Radio 4 Contributors"
+            URL "${CONFIG_GR4_INCUBATOR_REPO_URL}"
+            DOWNLOAD "${CONFIG_GR4_INCUBATOR_REPO_URL}"
+            NOTES SUMMARY "Experimental blocks (IIO, SoapySDR)"
+            PURPOSE "LIBRARY"
+        )
+    endif()
 
     # Conditional runtime dependencies
     if(CONFIG_ENABLE_HTTP AND DEFINED httplib_DIR)

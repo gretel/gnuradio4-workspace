@@ -8,6 +8,10 @@ jobs:
   # ── GitHub-hosted runners: macOS + Linux ──
   build:
     name: "${{ matrix.os }} / ${{ matrix.config }}"
+    permissions:
+      id-token: write
+      contents: read
+      attestations: write
     strategy:
       fail-fast: false
       matrix:
@@ -41,6 +45,16 @@ jobs:
         run: ./build/dev/src/gnuradio4
       - name: Install (generates SBOM)
         run: cmake --install build/dev --prefix build/install
+      - name: Pack SDK
+        run: tar czf sdk.tar.gz -C build/install .
+      - name: Locate SBOM
+        id: sbom
+        run: echo "path=$(find build/install/share -name '*.spdx' | head -1)" >> "$GITHUB_OUTPUT"
+      - name: Attest SDK with SBOM
+        uses: actions/attest@v4
+        with:
+          subject-path: sdk.tar.gz
+          sbom-path: ${{ steps.sbom.outputs.path }}
       - name: Upload SBOM
         uses: actions/upload-artifact@v4
         with:
@@ -50,6 +64,10 @@ jobs:
   # ── Full profile (main branch only) ──
   full:
     if: github.ref == 'refs/heads/main'
+    permissions:
+      id-token: write
+      contents: read
+      attestations: write
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
@@ -71,6 +89,16 @@ jobs:
         run: ./build/dev/src/gnuradio4
       - name: Install (generates SBOM)
         run: cmake --install build/dev --prefix build/install
+      - name: Pack SDK
+        run: tar czf sdk.tar.gz -C build/install .
+      - name: Locate SBOM
+        id: sbom
+        run: echo "path=$(find build/install/share -name '*.spdx' | head -1)" >> "$GITHUB_OUTPUT"
+      - name: Attest SDK with SBOM
+        uses: actions/attest@v4
+        with:
+          subject-path: sdk.tar.gz
+          sbom-path: ${{ steps.sbom.outputs.path }}
       - name: Upload SBOM
         uses: actions/upload-artifact@v4
         with:
@@ -80,6 +108,10 @@ jobs:
   # ── Self-hosted Windows (LLVM MinGW, ARM64) ──
   windows:
     if: github.ref == 'refs/heads/main'
+    permissions:
+      id-token: write
+      contents: read
+      attestations: write
     runs-on: [self-hosted, windows, arm64]
     steps:
       - uses: actions/checkout@v6
@@ -91,6 +123,18 @@ jobs:
         run: cmake --workflow --preset windows
       - name: Install (generates SBOM)
         run: cmake --install build/dev --prefix build/install
+      - name: Pack SDK
+        shell: bash
+        run: tar czf sdk.tar.gz -C build/install .
+      - name: Locate SBOM
+        id: sbom
+        shell: bash
+        run: echo "path=$(find build/install/share -name '*.spdx' | head -1)" >> "$GITHUB_OUTPUT"
+      - name: Attest SDK with SBOM
+        uses: actions/attest@v4
+        with:
+          subject-path: sdk.tar.gz
+          sbom-path: ${{ steps.sbom.outputs.path }}
       - name: Upload SBOM
         uses: actions/upload-artifact@v4
         with:
