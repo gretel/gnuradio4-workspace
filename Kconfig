@@ -305,6 +305,140 @@ config SANITIZER_THREAD
         Enables ThreadSanitizer for data race detection. Strong impact on
         performance. Catches race conditions in multi-threaded code.
 endchoice
+
+menu "Reproducibility"
+config GIT_ABBREV_LEN
+	int "Git abbreviated hash length"
+	range 4 40
+	default 12
+	help
+	    Pinned abbreviation length for git commit hashes embedded in
+	    version information. The default --short varies with the number
+	    of git objects (full vs shallow clones produce different
+	    lengths), breaking reproducible builds. Setting a fixed value
+	    (default 12) ensures the same commit always produces the same
+	    abbreviated hash string.
+
+config REPRODUCIBLE_RPATH
+	bool "Reproducible RPATH (CMAKE_BUILD_RPATH_USE_ORIGIN)"
+	default y
+	help
+	    Use relative RPATH entries via $ORIGIN instead of absolute
+	    build-directory paths. Makes installed binaries relocatable
+	    and removes build-machine-specific paths from the output.
+	    Trade-off: run-from-build-dir may need LD_LIBRARY_PATH if
+	    CMAKE_SKIP_RPATH is also on (not the default here).
+
+config CXX_EXTENSIONS
+	bool "Enable compiler language extensions (gnu++23)"
+	default n
+	help
+	    By default, the project compiles in standard C++23 mode
+	    (c++23). Enabling this switches to gnu++23, which allows
+	    compiler-specific extensions (typeof, __int128 builtins,
+	    etc.). Keep OFF for maximum portability; enable only if a
+	    sub-project or toolchain requires GNU extensions.
+endmenu
+endmenu
+
+menu "Diagnostics"
+depends on ENABLE_GR4_CORE
+
+config ENABLE_DIAGNOSTICS
+	bool "CMake diagnostics (CMake >= 4.4)"
+	default n
+	help
+	    Enable CMake's built-in diagnostic categories (cmake-diagnostics(7))
+	    for identifying potential issues in the build configuration.
+	    Requires CMake >= 4.4; silently ignored on older versions.
+	    Categories: policy, deprecated, uninitialized, author, unused CLI
+	    options. The dev CMake preset enables these interactively.
+
+if ENABLE_DIAGNOSTICS
+
+config DIAG_ERROR_POLICY
+	bool "Promote CMD_POLICY to errors"
+	default n
+	help
+	    Treat CMake policy deprecation warnings as errors. Helps catch
+	    use of deprecated APIs during CI.
+
+config DIAG_WARN_DEPRECATED
+	bool "Warn on deprecated CMake commands"
+	default y
+	help
+	    Emit warnings when CMake commands or variables that have been
+	    deprecated in the current CMake version are used.
+
+config DIAG_WARN_UNINITIALIZED
+	bool "Warn on uninitialized variables"
+	default y
+	help
+	    Emit warnings when CMake encounters reference to variables
+	    that have not been defined. Helps catch typos in variable names.
+
+config DIAG_WARN_UNUSED_CLI
+	bool "Warn on unused CLI variables"
+	default n
+	help
+	    Emit warnings when -D variables on the command line are not
+	    used during configuration. Helps catch misspelled cache vars.
+
+endif
+endmenu
+
+menu "Instrumentation"
+depends on ENABLE_GR4_CORE
+
+config ENABLE_INSTRUMENTATION
+	bool "Build instrumentation (CMake >= 4.3, Ninja only)"
+	default n
+	help
+	    Enable CMake's instrumentation API (cmake-instrumentation(7))
+	    for collecting timing data, target information, and system
+	    diagnostics during configure, build, and test steps.
+	    Generates Google Trace files viewable in chrome://tracing.
+	    Requires CMake >= 4.3; emits a WARNING on older versions.
+	    Only available with Makefile/Ninja generators.
+
+if ENABLE_INSTRUMENTATION
+
+config INSTR_HOOK
+	string "Instrumentation hook"
+	default "postCMakeBuild"
+	help
+	    When to collect instrumentation data. One of: postCMakeBuild,
+	    postCMakeInstall, postCTest, or none. Default postCMakeBuild
+	    runs after every cmake --build.
+
+config INSTR_TRACE
+	bool "Google Trace file (chrome://tracing)"
+	default y
+	help
+	    Generate a Google Trace Event Format file during indexing.
+	    Visualize build timeline in Chrome DevTools (chrome://tracing)
+	    or Speedscope. Requires the CMD_TRACE option in CMake >= 4.3.
+
+config INSTR_COMPILE_TRACE
+	bool "Capture Clang -ftime-trace per-TU JSON (CMake >= 4.4)"
+	depends on TIMETRACE
+	default n
+	help
+	    Copy Clang -ftime-trace JSON files into the instrumentation
+	    data directory. Requires both TIMETRACE (for the compiler flag)
+	    and INSTRUMENTATION with compileTrace option (CMake >= 4.4).
+	    This supersedes the standalone TIMETRACE bool for CI use;
+	    standalone TIMETRACE remains for ad-hoc per-TU profiling.
+
+config INSTR_CAPTURE_OUTPUT
+	bool "Capture stdout/stderr per compile/link/test (CMake >= 4.4)"
+	default n
+	help
+	    Capture standard output and error streams for each compile, link,
+	    custom command, test, and install step. Useful for debugging but
+	    increases instrumentation data volume. Requires CMake >= 4.4.
+
+endif
 endmenu
 
 menu "Dependencies"

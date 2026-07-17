@@ -10,6 +10,13 @@ cmake --build build/dev
 ctest --test-dir build/dev/workspace --output-on-failure
 ```
 
+Interactive development (with diagnostics + ccache):
+
+```sh
+cmake --preset dev
+cmake --build build/dev
+```
+
 | Platform | Preset | Toolchain | Notes |
 |----------|--------|-----------|-------|
 | macOS | `macos` | Homebrew LLVM (brew bundle) | `xcrun` needs Xcode CLT |
@@ -57,6 +64,26 @@ cmake -B build/dev       # regenerate after changes
 
 Symbols in `Kconfig`. Build profiles pin `configs/*_defconfig`.
 
+### Diagnostics menu (CMake ≥ 4.4)
+
+Controlled by `ENABLE_DIAGNOSTICS` (default n). When enabled:
+- `DIAG_ERROR_POLICY` — promote CMake policy deprecations to errors
+- `DIAG_WARN_DEPRECATED` — warn on deprecated commands (default y)
+- `DIAG_WARN_UNINITIALIZED` — warn on unset variables (default y)
+- `DIAG_WARN_UNUSED_CLI` — warn on unused `-D` flags (default n)
+
+The `dev` preset turns these on interactively; CI profiles keep them off.
+
+### Instrumentation menu (CMake ≥ 4.3)
+
+Controlled by `ENABLE_INSTRUMENTATION` (default n). When enabled:
+- `INSTR_HOOK` — when to collect: `postCMakeBuild` (default), `postCMakeInstall`, `postCTest`
+- `INSTR_TRACE` — generate Google Trace file (chrome://tracing), default y
+- `INSTR_COMPILE_TRACE` — capture Clang `-ftime-trace` per-TU JSON (CMake ≥ 4.4)
+- `INSTR_CAPTURE_OUTPUT` — capture stdout/stderr per compile/link (CMake ≥ 4.4)
+
+Generates `<build>/.cmake/instrumentation/v1/data/trace/trace-*.json`.
+
 ## Key files
 
 | File | Role |
@@ -70,6 +97,7 @@ Symbols in `Kconfig`. Build profiles pin `configs/*_defconfig`.
 | `workspace/CMakeLists.txt` | Downstream smoke test |
 | `Brewfile` | macOS system deps |
 | `cmake/sbom.cmake` | SPDX SBOM generator (sodgeit/CMake-SBOM-Builder v0.7.0) |
+
 
 ## SBOM
 
@@ -91,6 +119,19 @@ cmake -B build/dev -DCONFIG_ENABLE_SBOM=n   # disable
 cmake --install build/dev --prefix /tmp/install
 ls /tmp/install/share/gnuradio4-workspace-sbom-*.spdx
 ```
+
+### Reproducible SBOMs
+
+Set the `SOURCE_DATE_EPOCH` environment variable (POSIX convention from
+[Reproducible Builds](https://reproducible-builds.org/)) to pin all
+timestamps in the SBOM and version headers to a fixed point in time:
+
+```sh
+SOURCE_DATE_EPOCH=$(git log -1 --format=%ct) cmake --install build/dev --prefix /tmp/install
+```
+
+Two installs with the same `SOURCE_DATE_EPOCH`, `GIT_ABBREV_LEN`, and git
+object graph produce byte-identical `*.spdx` files.
 
 ### Dependency list (manual)
 
@@ -174,8 +215,19 @@ macOS ld64 rescans by default. Linux needs `LINK_GROUP:RESCAN` for `gnuradio-blo
 Baked at configure time. Reconfigure (`cmake -B build/dev`) after commit to pick up new hash.
 
 ### cmake version
-Requires >= 3.27.
+Requires >= 3.27 (range syntax `3.27...4.3` enables policies up to 4.3).
 
+### Reproducible builds
+
+- **Git abbreviation**: pinned to `GIT_ABBREV_LEN` (default 12, Kconfig
+  `Build > Reproducibility`) so shallow and full clones produce the same
+  abbreviated hash. Override via `core.abbrev` git config if a different
+  length is needed.
+- **RPATH**: `CMAKE_BUILD_RPATH_USE_ORIGIN=ON` (Kconfig `REPRODUCIBLE_RPATH`,
+  default y) generates relative RPATH entries so binaries are relocatable.
+  Equivalent to the cmake(1) recommendation for upstream projects.
+- **SBOM timestamps**: honour `SOURCE_DATE_EPOCH` (see §SBOM). When unset,
+  fall back to wall-clock time (unchanged behaviour).
 ### Lint
 
 ```sh

@@ -35,7 +35,9 @@ function(version_extract)
 
 	if(Git_FOUND)
 		execute_process(
-			COMMAND ${GIT_EXECUTABLE} rev-parse --short HEAD
+			# Pinned abbreviation length (12) for reproducible builds;
+			# avoids length variation with shallow vs full clones.
+			COMMAND ${GIT_EXECUTABLE} rev-parse --short=12 HEAD
 			WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
 			OUTPUT_VARIABLE _git_short_hash
 			ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -63,7 +65,7 @@ function(version_extract)
 		endif()
 
 		execute_process(
-			COMMAND ${GIT_EXECUTABLE} describe --tags --always
+			COMMAND ${GIT_EXECUTABLE} describe --tags --always --abbrev=12
 			WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
 			OUTPUT_VARIABLE _git_describe
 			ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -769,22 +771,35 @@ function(sbom_finalize)
 		message(FATAL_ERROR "Call sbom_generate() first")
 	endif()
 
-	_sbom_append_sbom_snippet("finalize.cmake")
+		_sbom_append_sbom_snippet("finalize.cmake")
 	file(GENERATE
 		OUTPUT ${_sbom_snippet_dir}/finalize.cmake
 		CONTENT
-"message(STATUS \"Finalizing: \${SBOM_EXPORT_FILENAME}\")
+[=[message(STATUS "Finalizing: ${SBOM_EXPORT_FILENAME}")
 list(SORT SBOM_VERIFICATION_CODES)
-string(REPLACE \";\" \"\" SBOM_VERIFICATION_CODES \"\${SBOM_VERIFICATION_CODES}\")
-string(TIMESTAMP SBOM_CREATE_DATE UTC)
-if(NOT \"\${SBOM_EXT_DOCS}\" STREQUAL \"\")
-	string(REPLACE \";\" \"\\n\" SBOM_EXT_DOCS \"\${SBOM_EXT_DOCS}\")
-	string(APPEND SBOM_EXT_DOCS \"\\n\")
+string(REPLACE ";" "" SBOM_VERIFICATION_CODES "${SBOM_VERIFICATION_CODES}")
+if(DEFINED ENV{SOURCE_DATE_EPOCH})
+	set(_sde "$ENV{SOURCE_DATE_EPOCH}")
+	if(_sde MATCHES "^[0-9]+$")
+		if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.28)
+			string(TIMESTAMP SBOM_CREATE_DATE "%Y-%m-%dT%H:%M:%S" "${_sde}" UTC)
+		else()
+			string(TIMESTAMP SBOM_CREATE_DATE UTC)
+		endif()
+	else()
+		string(TIMESTAMP SBOM_CREATE_DATE UTC)
+	endif()
+else()
+	string(TIMESTAMP SBOM_CREATE_DATE UTC)
 endif()
-file(WRITE \"\${SBOM_BINARY_DIR}/sbom-build/$<CONFIG>/verification.txt\" \"\${SBOM_VERIFICATION_CODES}\")
-file(SHA1 \"\${SBOM_BINARY_DIR}/sbom-build/$<CONFIG>/verification.txt\" SBOM_VERIFICATION_CODE)
-configure_file(\"\${SBOM_INTERMEDIATE_FILE}\" \"\${SBOM_EXPORT_FILENAME}\")
-"
+if(NOT "${SBOM_EXT_DOCS}" STREQUAL "")
+	string(REPLACE ";" "\n" SBOM_EXT_DOCS "${SBOM_EXT_DOCS}")
+	string(APPEND SBOM_EXT_DOCS "\n")
+endif()
+file(WRITE "${SBOM_BINARY_DIR}/sbom-build/$<CONFIG>/verification.txt" "${SBOM_VERIFICATION_CODES}")
+file(SHA1 "${SBOM_BINARY_DIR}/sbom-build/$<CONFIG>/verification.txt" SBOM_VERIFICATION_CODE)
+configure_file("${SBOM_INTERMEDIATE_FILE}" "${SBOM_EXPORT_FILENAME}")
+]=]
 	)
 
 	# using a build dir will generate a seperate cmake_install.cmake file

@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MIT
-cmake_minimum_required(VERSION 3.27)
+cmake_minimum_required(VERSION 3.27...4.3)
 project(gnuradio4-workspace VERSION 4.0.0 LANGUAGES CXX)
 
 # ---- Superbuild: orchestrates ExternalProject builds for split repos ----
@@ -8,10 +8,22 @@ project(gnuradio4-workspace VERSION 4.0.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+# Default OFF: standard C++23 only. Flip CONFIG_CXX_EXTENSIONS=y for gnu++23.
+if(DEFINED CONFIG_CXX_EXTENSIONS AND CONFIG_CXX_EXTENSIONS)
+    set(CMAKE_CXX_EXTENSIONS ON)
+else()
+    set(CMAKE_CXX_EXTENSIONS OFF)
+endif()
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+# ---- Reproducible RPATH (build-tree relative, not absolute) ----
+# Avoids build-directory absolute paths in RPATH so binaries are
+# relocatable and builds are bit-reproducible across different trees.
+option(CMAKE_BUILD_RPATH_USE_ORIGIN "Use relative RPATH entries (reproducible builds)" ON)
+mark_as_advanced(CMAKE_BUILD_RPATH_USE_ORIGIN)
 
 # ---- Kconfig configurator ----
 set(PROJECT_ROOT "${CMAKE_SOURCE_DIR}")
@@ -69,14 +81,52 @@ if(CONFIG_ENABLE_SBOM)
     endif()
 endif()
 
+# ---- Build instrumentation (CMake >= 4.3) ----
+# Kconfig: ENABLE_INSTRUMENTATION, INSTR_TRACE, INSTR_COMPILE_TRACE, etc.
+# Gracefully degrades to WARNING on older CMake — never FATAL_ERROR.
+if(CONFIG_ENABLE_INSTRUMENTATION)
+    if(CMAKE_VERSION VERSION_GREATER_EQUAL 4.3)
+        set(_instr_opts staticSystemInformation dynamicSystemInformation)
+        if(CONFIG_INSTR_TRACE)
+            list(APPEND _instr_opts trace)
+        endif()
+        if(CONFIG_INSTR_COMPILE_TRACE AND CMAKE_VERSION VERSION_GREATER_EQUAL 4.4)
+            list(APPEND _instr_opts compileTrace)
+        endif()
+        if(CONFIG_INSTR_CAPTURE_OUTPUT AND CMAKE_VERSION VERSION_GREATER_EQUAL 4.4)
+            list(APPEND _instr_opts captureOutput)
+        endif()
+        if(NOT DEFINED CONFIG_INSTR_HOOK OR CONFIG_INSTR_HOOK STREQUAL "")
+            set(_instr_hook "postCMakeBuild")
+        else()
+            set(_instr_hook "${CONFIG_INSTR_HOOK}")
+        endif()
+        cmake_instrumentation(
+            HOOKS ${_instr_hook}
+            OPTIONS ${_instr_opts})
+        message(STATUS "instrumentation: enabled (hook=${_instr_hook})")
+        unset(_instr_opts)
+        unset(_instr_hook)
+    else()
+        message(WARNING "ENABLE_INSTRUMENTATION=y requires CMake >= 4.3 "
+            "(have ${CMAKE_VERSION}); instrumentation disabled")
+    endif()
+endif()
+
 # ---- Precompile headers for faster sub-project test compilation ----
 option(GR4_USE_PRECOMPILE_HEADERS
     "Use precompiled headers in sub-project test targets" OFF)
 mark_as_advanced(GR4_USE_PRECOMPILE_HEADERS)
 
 # ---- Git revision (updated at build time) ----
+# Pinned abbreviation length (Kconfig GIT_ABBREV_LEN, default 12) for reproducible builds.
+# Avoids the default --short (length varies with git object count / clone depth).
+set(_git_abbrev_len 12)
+if(DEFINED CONFIG_GIT_ABBREV_LEN AND NOT CONFIG_GIT_ABBREV_LEN STREQUAL "")
+    set(_git_abbrev_len ${CONFIG_GIT_ABBREV_LEN})
+endif()
 execute_process(
-    COMMAND git rev-parse --short HEAD
+    COMMAND git rev-parse --short=${_git_abbrev_len} HEAD
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     OUTPUT_VARIABLE GIT_REV OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
 if(NOT GIT_REV)
@@ -88,11 +138,12 @@ endif()
 set(GIT_REV_FILE "${CMAKE_BINARY_DIR}/GIT_REV.txt")
 file(WRITE "${GIT_REV_FILE}" "${GIT_REV}")
 add_custom_target(update_git_rev ALL
-    COMMAND ${CMAKE_COMMAND} -DPATH="${CMAKE_SOURCE_DIR}" -DOUTFILE=${GIT_REV_FILE}
+    COMMAND ${CMAKE_COMMAND} -DPATH="${CMAKE_SOURCE_DIR}" -DOUTFILE=${GIT_REV_FILE} -DABBREV_LEN=${_git_abbrev_len}
         -P "${CMAKE_SOURCE_DIR}/cmake/update_git_rev.cmake"
     BYPRODUCTS "${GIT_REV_FILE}"
     COMMENT "Updating GIT_REV (build-time)"
     VERBATIM)
+unset(_git_abbrev_len)
 
 # ---- Platform-specific defaults (for this superbuild, not sub-projects) ----
 if(APPLE AND CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
@@ -132,6 +183,7 @@ set(_ep_common_args
     -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE
     -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
     -DCMAKE_COLOR_DIAGNOSTICS=OFF
+    -DCMAKE_BUILD_RPATH_USE_ORIGIN=ON
     -DUSE_CCACHE=${CONFIG_CACHE_CCACHE}
     "-DCMAKE_CXX_FLAGS_INIT=-Wno-psabi -Wno-error=null-dereference"
 )
@@ -139,6 +191,13 @@ if(CMAKE_TOOLCHAIN_FILE)
     list(APPEND _ep_common_args -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
     # C compiler needed for cross-compilation; on native builds sub-projects auto-detect
     list(APPEND _ep_common_args -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER})
+endif()
+# Propagate compiler extension setting to sub-projects
+# Default OFF (standard C++23 only); CONFIG_CXX_EXTENSIONS=y flips to ON.
+if(DEFINED CONFIG_CXX_EXTENSIONS AND CONFIG_CXX_EXTENSIONS)
+    list(APPEND _ep_common_args -DCMAKE_CXX_EXTENSIONS=ON)
+else()
+    list(APPEND _ep_common_args -DCMAKE_CXX_EXTENSIONS=OFF)
 endif()
 # Propagate top-level build tool so sub-builds use the same one (Ninja via presets)
 # ExternalProject auto-detects the generator but does not forward the make program

@@ -2,11 +2,12 @@
 # Workspace — builds against the installed GR4 SDK.
 # Copy this to create your own flowgraph apps.
 
-cmake_minimum_required(VERSION 3.27)
+cmake_minimum_required(VERSION 3.27...4.3)
 project(workspace LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 # ---- Required: core SDK ----
 find_package(gnuradio4 CONFIG REQUIRED)

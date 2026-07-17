@@ -1,10 +1,11 @@
 {
-  "version": 8,
+  "version": 10,
   "cmakeMinimumRequired": {
     "major": 3,
     "minor": 27,
     "patch": 0
   },
+  "$comment": "Preset version 10. Platform presets: macos (Darwin), linux, windows (LLVM MinGW). dev preset enables ccache + checks cache for interactive development. Diagnostics are configurable via Kconfig (ENABLE_DIAGNOSTICS) — preset-level warnings/errors need CMake ≥ 4.4 preset v12.",
   "configurePresets": [
     {
       "name": "base",
@@ -14,6 +15,12 @@
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
         "CMAKE_BUILD_TYPE": "RelWithDebInfo"
       }
+    },
+    {
+      "name": "dev-base",
+      "hidden": true,
+      "inherits": "base",
+      "cacheVariables": {}
     },
     {
       "name": "macos",
@@ -60,6 +67,13 @@
         "CONFIG_ENABLE_GR4_BLOCKS": "n",
         "CONFIG_WARNINGS_AS_ERRORS": "n"
       }
+    },
+    {
+      "name": "dev",
+      "displayName": "Developer (diagnostics + ccache)",
+      "description": "Platform-agnostic dev preset: enables CMake diagnostics (CMake ≥ 4.4), ccache, and the checks cache. Uses whatever compiler is on PATH — for Homebrew LLVM on macOS, use the macos preset instead.",
+      "inherits": "dev-base",
+      "binaryDir": "${sourceDir}/build/dev"
     }
   ],
   "buildPresets": [
@@ -76,6 +90,11 @@
     {
       "name": "windows",
       "configurePreset": "windows",
+      "jobs": 0
+    },
+    {
+      "name": "dev",
+      "configurePreset": "dev",
       "jobs": 0
     }
   ],
@@ -103,6 +122,16 @@
     {
       "name": "windows",
       "configurePreset": "windows",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "jobs": 0
+      }
+    },
+    {
+      "name": "dev",
+      "configurePreset": "dev",
       "output": {
         "outputOnFailure": true
       },
@@ -160,6 +189,23 @@
         {
           "type": "test",
           "name": "windows"
+        }
+      ]
+    },
+    {
+      "name": "dev",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "dev"
+        },
+        {
+          "type": "build",
+          "name": "dev"
+        },
+        {
+          "type": "test",
+          "name": "dev"
         }
       ]
     }
