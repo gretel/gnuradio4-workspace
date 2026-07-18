@@ -465,6 +465,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/repos/gnuradio4-algorithm.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/repos/gnuradio4-blocks.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/repos/gr4-incubator.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/repos/gr4-control-plane.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/repos/gr4-studio.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/repos/workspace.cmake)
 
 # ---- install target: deploy SDK from ephemeral _INSTALL_PREFIX to stable prefix ----
