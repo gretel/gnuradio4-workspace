@@ -220,12 +220,6 @@ config ENABLE_SDR
         Requires SoapySDR development package at build time.
         Passed as GR4_ENABLE_SDR to gnuradio4-blocks.
 
-config ENABLE_MIT_ONLY
-    bool "Exclude non-MIT/Apache-2.0 licensed modules"
-    default n
-    help
-        Exclude modules with non-MIT/Apache-compatible licences.
-        Drops GPL/LGPL-only blocks from the build.
 endmenu
 
 menu "Build"
