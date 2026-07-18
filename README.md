@@ -197,22 +197,10 @@ cmake --install build/dev --prefix /opt/gnuradio4
 
 ## SBOM & attestation
 
-An SPDX 2.3 Software Bill of Materials (`*.spdx`) is generated automatically during `cmake --install` via [CMake-SBOM-Builder v0.7.0](https://github.com/sodgeit/CMake-SBOM-Builder) (see [AGENTS.md](AGENTS.md#sbom)). Toggle with `ENABLE_SBOM` in Kconfig (default `y`).
+An SPDX 2.3 Software Bill of Materials (`*.spdx`) is generated during `cmake --install` via [CMake-SBOM-Builder v0.7.0](https://github.com/sodgeit/CMake-SBOM-Builder).
+Toggle with `ENABLE_SBOM` in Kconfig (default `y`). For reproducible timestamps, set `SOURCE_DATE_EPOCH`.
 
-In CI, the SBOM can be cryptographically bound to the build provenance using [GitHub artifact attestation](https://docs.github.com/en/actions/security-for-github-actions/using-artifact-attestations):
-
-```yaml
-- name: Attest SBOM
-  uses: actions/attest@v4
-  with:
-    subject-path: ${{ github.workspace }}/build/install/share/*.spdx
-    predicate-type: https://spdx.dev/Document
-    predicate-path: ${{ github.workspace }}/build/install/share/*.spdx
-```
-
-The `--sbom-path` flag feeds the SPDX file as the predicate, letting consumers verify both the artifact hash and its dependency list against a trusted build.
-
-To verify an attested SBOM locally:
+To verify an attested SBOM:
 
 ```sh
 gh attestation verify share/gnuradio4_workspace-sbom-*.spdx --owner gretel
