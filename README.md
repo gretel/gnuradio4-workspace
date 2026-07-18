@@ -215,7 +215,7 @@ The `--sbom-path` flag feeds the SPDX file as the predicate, letting consumers v
 To verify an attested SBOM locally:
 
 ```sh
-gh attestation verify share/gnuradio4_workspace-sbom-*.spdx --owner ghost-in-the-z
+gh attestation verify share/gnuradio4_workspace-sbom-*.spdx --owner gretel
 ```
 
 ## Split repos
