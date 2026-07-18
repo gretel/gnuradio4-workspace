@@ -25,11 +25,10 @@ jobs:
       - name: Install deps
         run: |
           if [ "$RUNNER_OS" = "macOS" ]; then
-            brew install llvm cmake ninja ccache libsoundio cpp-httplib
+            brew install llvm cmake ninja ccache
           else
             sudo apt-get update && \
-              sudo apt-get install -y cmake ninja-build ccache g++-14 \
-                libsoundio-dev libcpp-httplib-dev
+              sudo apt-get install -y cmake ninja-build ccache g++-14
           fi
       - name: Configure
         env:
@@ -76,8 +75,7 @@ jobs:
       - name: Install deps
         run: |
           sudo apt-get update && \
-          sudo apt-get install -y cmake ninja-build ccache g++-14 \
-            libsoundio-dev libcpp-httplib-dev
+          sudo apt-get install -y cmake ninja-build ccache g++-14 libcpp-httplib-dev
       - name: Configure
         env:
           CC: gcc-14

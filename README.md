@@ -32,19 +32,6 @@ winget install -e --id MartinStorsjo.LLVM-MinGW.UCRT
 winget install -e --id bloodrock.pkg-config-lite
 ```
 
-## Windows
-
-- Install prerequisites with `winget` (see [Prerequisites](#prerequisites)).
-- Optional libraries (cpp-httplib, nlohmann-json, GTest, SoapySDR) are
-  **automatically fetched** by CMake via `FetchContent` when needed on
-  Windows — no winget packages required.
-- Block registry and plugins are disabled by default (the plugin loader uses `dlopen`, which is not available on Windows/MinGW). Override via `CONFIG_ENABLE_BLOCK_REGISTRY` / `CONFIG_ENABLE_BLOCK_PLUGINS` in the Windows preset.
-- The `full` build profile is not supported on Windows (it enables block plugins).
-- Known test issues: `qa_Tags` (`CONTEXT` identifier collision with `winnt.h`), `qa_thread_affinity` (POSIX `SCHED_*` constants not available). These are guarded at compile time.
-- Ninja stdout buffered by `cmd.exe` over SSH — output only appears after the process exits.
-  Workarounds: build individual targets (`ninja -j1 target.exe`), redirect to a log file
-  (`ninja > build.log 2>&1`), or use a PowerShell background job.
-
 ## Quick start
 
 Configure, build, and smoke-test with one platform preset. Missing source dependencies are fetched from GitHub automatically.
@@ -63,6 +50,18 @@ cmake --preset windows -DBUILD_CONFIG=sdk
 cmake --build build/dev
 ```
 
+### Windows
+
+- Optional libraries (cpp-httplib, nlohmann-json, GTest, SoapySDR) are
+  **automatically fetched** by CMake via `FetchContent` when needed on
+  Windows — no winget packages required.
+- Block registry and plugins are disabled by default (the plugin loader uses `dlopen`, which is not available on Windows/MinGW). Override via `CONFIG_ENABLE_BLOCK_REGISTRY` / `CONFIG_ENABLE_BLOCK_PLUGINS` in the Windows preset.
+- The `full` build profile is not supported on Windows (it enables block plugins).
+- Known test issues: `qa_Tags` (`CONTEXT` identifier collision with `winnt.h`), `qa_thread_affinity` (POSIX `SCHED_*` constants not available). These are guarded at compile time.
+- Ninja stdout buffered by `cmd.exe` over SSH — output only appears after the process exits.
+  Workarounds: build individual targets (`ninja -j1 target.exe`), redirect to a log file
+  (`ninja > build.log 2>&1`), or use a PowerShell background job.
+
 ## Configuration
 
 The superbuild uses **Kconfig** for all build options — symbols are defined in `Kconfig` at the project root and resolved at configure time.
@@ -77,7 +76,7 @@ Predefined defconfig files in `configs/` provide ready-to-use sets of Kconfig va
 |---------|------|---------|---------------------|----------|
 | `sdk`  | `sdk_defconfig`  | off | off | Minimal SDK, no optional system deps needed |
 | `ci`   | `ci_defconfig`   | on (Werror) | off | CI / QA, same deps as sdk |
-| `full` | `full_defconfig` | on (Werror) | on | Full SDK with control-plane, requires cpp-httplib |
+| `full` | `full_defconfig` | on (Werror) | on | Full SDK with control-plane + SDR, requires cpp-httplib + SoapySDR |
 
 The SDK profile is the default (`-DBUILD_CONFIG=sdk`). `CONFIG_ENABLE_GR4_CORE=y` auto-selects library + blocks via Kconfig dependency chains.
 
@@ -95,16 +94,6 @@ Changes are written to `build/dev/.config` and persist across rebuilds. To switc
 ### Custom profile
 
 For full control, edit `build/dev/.config` directly and re-run `cmake -B build/dev`, or create your own defconfig file and pass it with `-DBUILD_CONFIG=custom`.
-
-> **Windows notes**
-> - Install prerequisites with `winget` (see below).
-> - Block registry and plugins are disabled by default in the `windows` preset
->   (sdk/ci profiles). The `dlopen`-based plugin loader now works on Windows
->   via [dlfcn-win32](https://github.com/dlfcn-win32/dlfcn-win32); enable with
->   `CONFIG_ENABLE_BLOCK_REGISTRY=y` / `CONFIG_ENABLE_BLOCK_PLUGINS=y`.
-> - The `full` build profile is no longer blocked by the plugin-loader issue,
->   but other profile features (SDR, control-plane) remain experimental on Windows.
-> - Known test issues on Windows: `qa_Tags` (`CONTEXT` identifier collision with `winnt.h`), `qa_thread_affinity` (POSIX `SCHED_*` constants not available). These are guarded at compile time.
 
 ## Quick reference
 
@@ -225,7 +214,7 @@ The `--sbom-path` flag feeds the SPDX file as the predicate, letting consumers v
 To verify an attested SBOM locally:
 
 ```sh
-gh attestation verify share/gnuradio4_workspace-sbom-*.spdx --owner ghost-in-the-z
+gh attestation verify share/gnuradio4_workspace-sbom-*.spdx --owner gnuradio
 ```
 
 ## Split repos
