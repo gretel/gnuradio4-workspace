@@ -17,12 +17,6 @@
       }
     },
     {
-      "name": "dev-base",
-      "hidden": true,
-      "inherits": "base",
-      "cacheVariables": {}
-    },
-    {
       "name": "macos",
       "displayName": "macOS (Homebrew LLVM)",
       "inherits": "base",
@@ -75,7 +69,7 @@
       "name": "dev",
       "displayName": "Developer (diagnostics + ccache)",
       "description": "Platform-agnostic dev preset: enables CMake diagnostics (CMake ≥ 4.4), ccache, and the checks cache. Uses whatever compiler is on PATH — for Homebrew LLVM on macOS, use the macos preset instead.",
-      "inherits": "dev-base",
+      "inherits": "base",
       "binaryDir": "${sourceDir}/build/dev"
     }
   ],
