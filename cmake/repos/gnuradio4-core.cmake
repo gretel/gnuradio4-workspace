@@ -32,12 +32,6 @@ if(CONFIG_ENABLE_GR4_CORE)
         list(APPEND _ep_core_args -DTHREAD_SANITIZER=ON)
     endif()
 
-    if(WIN32 OR MINGW)
-        # cmake 4.x on MinGW: CMAKE_CXX_FLAGS_INIT with -Wno-error=* flags causes
-        # "The warning category is not known" error because cmake parses -Wno-error
-        # flags as its own -W flags. Strip CXX_FLAGS_INIT to avoid this.
-        list(FILTER _ep_core_args EXCLUDE REGEX "CMAKE_CXX_FLAGS_INIT")
-    endif()
     # Add CONTEXT_KEY alias to Tag.hpp (workaround for gnuradio4-library #
     # having renamed CONTEXT→CONTEXT_KEY while core main still has CONTEXT).
     gr4_ep(gnuradio4-core
