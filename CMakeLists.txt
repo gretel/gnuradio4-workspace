@@ -119,7 +119,7 @@ option(GR4_USE_PRECOMPILE_HEADERS
     "Use precompiled headers in sub-project test targets" OFF)
 mark_as_advanced(GR4_USE_PRECOMPILE_HEADERS)
 
-# ---- Git revision (updated at build time) ----
+# ---- Git revision (set at configure time) ----
 # Pinned abbreviation length (Kconfig GIT_ABBREV_LEN, default 12) for reproducible builds.
 # Avoids the default --short (length varies with git object count / clone depth).
 set(_git_abbrev_len 12)
@@ -134,16 +134,6 @@ if(NOT GIT_REV)
     set(GIT_REV "unknown")
 endif()
 
-# Build-time GIT_REV update: forces re-generation on each build
-# Uses a cmake -P script for resilience — writes "unknown" when .git absent.
-set(GIT_REV_FILE "${CMAKE_BINARY_DIR}/GIT_REV.txt")
-file(WRITE "${GIT_REV_FILE}" "${GIT_REV}")
-add_custom_target(update_git_rev ALL
-    COMMAND ${CMAKE_COMMAND} -DPATH="${CMAKE_SOURCE_DIR}" -DOUTFILE=${GIT_REV_FILE} -DABBREV_LEN=${_git_abbrev_len}
-        -P "${CMAKE_SOURCE_DIR}/cmake/update_git_rev.cmake"
-    BYPRODUCTS "${GIT_REV_FILE}"
-    COMMENT "Updating GIT_REV (build-time)"
-    VERBATIM)
 unset(_git_abbrev_len)
 
 # ---- Platform-specific defaults (for this superbuild, not sub-projects) ----
