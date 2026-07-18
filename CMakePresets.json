@@ -63,7 +63,8 @@
         "CONFIG_ENABLE_GR4_ALGORITHM": "n",
         "CONFIG_ENABLE_GR4_BLOCKS": "n",
         "CONFIG_WARNINGS_AS_ERRORS": "n"
-      }
+      },
+      "$comment": "algorithm/blocks disabled on Windows due to known build failures (upstream not yet ported)"
     },
     {
       "name": "dev",
