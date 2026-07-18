@@ -263,6 +263,34 @@ config TIMETRACE
         Generates .json trace files for each translation unit.
         View with Chrome DevTools or Speedscope. Only works with Clang.
 
+config CXX_EXTENSIONS
+    bool "GNU C++ extensions (-std=gnu++23 instead of -std=c++23)"
+    default n
+    help
+        Enable GNU C++ extensions (gnu++23). Off by default for strict
+        standard C++23. Enabled by CONFIG_CXX_EXTENSIONS=y.
+
+menu "Reproducibility"
+    depends on ENABLE_GR4_CORE
+
+config GIT_ABBREV_LEN
+    int "Git abbreviated hash length"
+    range 4 40
+    default 12
+    help
+        Number of hex digits for abbreviated git commit hashes.
+        Pinned for reproducible builds — avoids length variation
+        between shallow and full clones.
+
+config REPRODUCIBLE_RPATH
+    bool "Relative RPATH entries"
+    default y
+    help
+        Use relative RPATH entries (CMAKE_BUILD_RPATH_USE_ORIGIN) instead
+        of absolute build-directory paths. Makes binaries relocatable and
+        builds bit-reproducible across different build trees.
+endmenu
+
 choice
     prompt "Caching"
     default CACHE_CCACHE
@@ -308,6 +336,29 @@ config SANITIZER_THREAD
         Enables ThreadSanitizer for data race detection. Strong impact on
         performance. Catches race conditions in multi-threaded code.
 endchoice
+endmenu
+
+menu "Diagnostics"
+    depends on ENABLE_GR4_CORE
+
+config ENABLE_DIAGNOSTICS
+    bool "Enable CMake diagnostics"
+    default n
+    help
+        Enable CMake diagnostic warnings for deprecations, uninitialized
+        variables, and unused CLI flags. Requires CMake >= 4.4 for full
+        preset-level support.
+endmenu
+
+menu "Instrumentation"
+    depends on ENABLE_GR4_CORE
+
+config ENABLE_INSTRUMENTATION
+    bool "Enable build instrumentation"
+    default n
+    help
+        Enable CMake build instrumentation (trace, compile tracing,
+        capture output). Requires CMake >= 4.3.
 endmenu
 
 menu "Dependencies"
