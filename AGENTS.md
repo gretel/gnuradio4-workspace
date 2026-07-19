@@ -246,7 +246,7 @@ Requires >= 3.27 (range syntax `3.27...4.3` enables policies up to 4.3).
   Equivalent to the cmake(1) recommendation for upstream projects.
 - **SBOM timestamps**: honour `SOURCE_DATE_EPOCH` (see §SBOM). When unset,
   fall back to wall-clock time (unchanged behaviour).
-### Lint
+## Lint
 
 ```sh
 prek run --all-files
