@@ -83,6 +83,17 @@ winget install -e --id bloodrock.pkg-config-lite
     - **presets** pick the platform and toolchain (see [Presets](#presets))
     - while **build profiles** pick the feature set.
 
+## Presets
+
+- CMake presets define the platform, toolchain, and build directory
+  - orthogonal to `-DBUILD_CONFIG` — pair any preset with any profile:
+
+| Target | Preset | Build dir | Toolchain |
+|--------|--------|-----------|-----------|
+| macOS | `macos` | `build/dev` | Homebrew LLVM |
+| Linux | `linux` | `build/dev` | gcc-14+ / clang-20+ |
+| Windows | `windows` | `build/dev` | LLVM MinGW clang++ |
+
 ### Build profiles
 
 - Predefined defconfig files in `configs/` provide ready-to-use sets of Kconfig values.
@@ -198,17 +209,6 @@ cmake --install build/dev --prefix /opt/gnuradio4
 ```sh
 gh attestation verify share/gnuradio4_workspace-sbom-*.spdx --owner gretel
 ```
-
-## Presets
-
-- CMake presets define the platform, toolchain, and build directory
-  - orthogonal to `-DBUILD_CONFIG` — pair any preset with any profile:
-
-| Target | Preset | Build dir | Toolchain |
-|--------|--------|-----------|-----------|
-| macOS | `macos` | `build/dev` | Homebrew LLVM |
-| Linux | `linux` | `build/dev` | gcc-14+ / clang-20+ |
-| Windows | `windows` | `build/dev` | LLVM MinGW clang++ |
 
 ## Lint
 
