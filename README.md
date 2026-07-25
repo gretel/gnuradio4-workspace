@@ -1,9 +1,17 @@
 # gnuradio4-workspace
 
-Superbuild for the GNU Radio 4.0 split-repo ecosystem.
+## ⚠️ Attention 
+
+- This is a prototype.
+- It pins my forks, not the upstream ones.
+- Not a lot of support can be given due to time constraints.
+
+## What is this?
+
+Superbuild for the GNU Radio 4.0 ecosystem.
 
 ```
-gnuradio4-core ──→ gnuradio4-library ──→ gnuradio4-blocks ──→ workspace/
+gnuradio4-core → gnuradio4-library → gnuradio4-blocks → workspace
 ```
 
 Builds three repos in dependency order via `ExternalProject_Add`, each installing to a shared prefix. The `workspace/` directory is where you build your own flowgraph apps against the installed SDK.
